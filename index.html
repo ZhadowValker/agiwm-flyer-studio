@@ -1155,9 +1155,68 @@ $('#addBtn').addEventListener('click',function(e){
   e.stopPropagation();
   menu(this,[
     {label:'Duplicate this flyer',fn:function(){duplicate(deck.i);}},
-    {label:'New flyer, original layout',fn:addBlank}
+    {label:'New flyer, original layout',fn:addBlank},
+    {label:'Make flyers from a schedule...',fn:scheduleDlg}
   ]);
 });
+
+
+/* ---------- schedule -> many flyers ---------- */
+var MONTHS=['january','february','march','april','may','june','july','august','september','october','november','december'];
+function parseSchedule(txt){
+  var lines=String(txt||'').replace(/\r/g,'').split('\n'),mon=-1,year=0,items=[];
+  var low=txt.toLowerCase();
+  MONTHS.forEach(function(m,i){if(mon<0&&new RegExp('\\b'+m+'\\b').test(low))mon=i;});
+  var ym=/\b(20\d\d)\b/.exec(txt);if(ym)year=+ym[1];
+  function tidy(n){return n.replace(/[\u{1F000}-\u{1FFFF}\u2600-\u27bf\ufe0f\u200d]/gu,'').replace(/[*_~]/g,'').replace(/^[\s.\u2026:\-\u2013\u2014,]+/,'').replace(/[\s.\u2026:\-\u2013\u2014,]+$/,'').replace(/\s+/g,' ').slice(0,60);}
+  for(var i=0;i<lines.length;i++){
+    var m=/^\W*(\d+)\s*(?:st|nd|rd|th)?\s*week(?:\s+of\s+[A-Za-z]+)?(.*)$/i.exec(lines[i].trim());
+    if(!m)continue;
+    var name=tidy(m[2]);if(!name&&lines[i+1]&&!/week/i.test(lines[i+1])){name=tidy(lines[i+1]);i++;}
+    if(name)items.push({week:+m[1],name:name});
+  }
+  return {mon:mon,year:year,items:items};
+}
+function nthWeekday(y,mo,wd,n){var d=new Date(y,mo,1),add=(wd-d.getDay()+7)%7;d=new Date(y,mo,1+add+7*(n-1));return d.getMonth()===mo?d:null;}
+function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function makeSchedule(txt){
+  var P=parseSchedule(txt),now=new Date();
+  if(!P.items.length)return {err:'I could not find any lines like "1st week ... Name".'};
+  var mo=P.mon>=0?P.mon:(now.getMonth()+1)%12;
+  var yr=P.year||(P.mon>=0&&P.mon<now.getMonth()?now.getFullYear()+1:(P.mon<0&&mo<now.getMonth()?now.getFullYear()+1:now.getFullYear()));
+  flush();
+  var base=cp(state),bm=/^(\d{4})-(\d\d)-(\d\d)$/.exec(base.d1.date),wd=bm?new Date(+bm[1],+bm[2]-1,+bm[3]).getDay():6;
+  var bm2=/^(\d{4})-(\d\d)-(\d\d)$/.exec(base.d2.date),off=(bm&&bm2)?Math.round((new Date(+bm[1],+bm[2]-1,+bm[3])-new Date(+bm2[1],+bm2[2]-1,+bm2[3]))/864e5):1;
+  var made=[],skipped=[],at=deck.i+1;
+  P.items.forEach(function(it){
+    var d=nthWeekday(yr,mo,wd,it.week);if(!d){skipped.push(it.name);return;}
+    var f=cp(base);f.id=uid();
+    f.left.name=it.name;f.left.place='';f.left.photo='';f.left.z=1;f.left.x=0;f.left.y=0;
+    f.d1.date=ymd(d);f.d2.date=ymd(new Date(d.getFullYear(),d.getMonth(),d.getDate()-off));
+    deck.flyers.splice(at++,0,f);made.push(f);
+  });
+  if(!made.length)return {err:'None of those weeks fall inside that month.'};
+  made.forEach(function(f){deck.i=deck.flyers.indexOf(f);bind();render();takeSnap();});
+  deck.i=deck.flyers.indexOf(made[0]);bind();syncAll();render();drawStrip();updCounter();buildBar();pushHist();persist();
+  return {n:made.length,skipped:skipped,month:MONTHS[mo],year:yr};
+}
+function scheduleDlg(){
+  var dlg=document.createElement('dialog');dlg.className='aid';
+  dlg.innerHTML='<form method="dialog" id="schF"><h2>Flyers from a schedule</h2><p class="nt">Paste the monthly list, one speaker per week. One flyer is made for each line, using the current flyer as the template (same times, Zoom, right speaker and style). The speaker goes in the left card; add each photo afterwards. The weekday is taken from this flyer\'s first date.</p>'
+   +'<label><span>Schedule</span><textarea id="schT" rows="8" style="width:100%;box-sizing:border-box;background:var(--ui-bg,#111);color:inherit;border:1px solid var(--ui-line);border-radius:8px;padding:8px;font:inherit" placeholder="Speakers scheduled for the month of November\n1st week of November  Rev Name\n2nd week ... Dr Name"></textarea></label>'
+   +'<p class="st" id="schS" role="status"></p><div class="acts"><button type="button" class="btn" id="schC">Close</button><button type="submit" class="btn pri" id="schG">Create flyers</button></div></form>';
+  document.body.appendChild(dlg);dlg.showModal();
+  var q=function(i){return dlg.querySelector(i);};
+  function close(){dlg.close();dlg.remove();}
+  q('#schC').addEventListener('click',close);
+  dlg.addEventListener('cancel',function(e){e.preventDefault();close();});
+  q('#schF').addEventListener('submit',function(e){e.preventDefault();
+    var r=makeSchedule(q('#schT').value);
+    if(r.err){q('#schS').textContent=r.err;return;}
+    close();toast(r.n+' flyers made for '+r.month.charAt(0).toUpperCase()+r.month.slice(1)+' '+r.year+(r.skipped.length?' ('+r.skipped.length+' skipped: no such week)':'')+'. Add photos next.');
+  });
+  setTimeout(function(){q('#schT').focus();},30);
+}
 
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',function(e){
