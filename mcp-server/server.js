@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 8080;
 const SECRET = process.env.MCP_SECRET || '';   // protects /mcp/<secret> and /api/*
 const here = path.dirname(fileURLToPath(import.meta.url));
 const STUDIO = process.env.STUDIO_FILE || path.join(here, 'flyer-studio.html');
-const BUILD = 'live-sync+people+dst';   // shown at /healthz so you can tell which build is live
+const BUILD = 'live-sync+people+dst+textstyle';   // shown at /healthz so you can tell which build is live
 
 const text = (t) => ({ content: [{ type: 'text', text: t }] });
 const fail = (e) => ({ isError: true, content: [{ type: 'text', text: e.message || String(e) }] });

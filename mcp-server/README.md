@@ -31,3 +31,7 @@ A WhatsApp bot would: receive the group message, ask an AI to turn it into an `u
     npm install
     MCP_SECRET=test npm start       # http://localhost:8080
 Chromium is bundled (`@sparticuz/chromium`); `CHROMIUM_PATH` can point at a system Chrome instead.
+
+## Text styling
+
+Every text on the flyer has its own colour, opacity, size and letter spacing (studio: click the text, scroll to its "style" group, or open "Text styles"; AI assistant and MCP `text_styles` do the same). Layer keys: ttl, sub, loc, scr, hd, tags, lbL/nmL/plL, lbR/nmR/plR, d1dt/d1wd/d1tm, d2dt/d2wd/d2tm, zl, zid, zpw, yl, yh, jt.

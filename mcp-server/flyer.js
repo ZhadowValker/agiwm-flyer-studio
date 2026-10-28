@@ -1,5 +1,6 @@
 // Maps friendly tool input onto the studio's flyer state.
 import { z } from 'zod';
+const STYLE_LAYERS = ['ttl','sub','loc','scr','hd','tags','lbL','nmL','plL','lbR','nmR','plR','d1dt','d1wd','d1tm','d2dt','d2wd','d2tm','zl','zid','zpw','yl','yh','jt'];
 import * as people from './people.js';
 import { shrinkImage } from './renderer.js';
 
@@ -41,6 +42,13 @@ export const flyerShape = {
   }).optional(),
   accent: z.object({ preset: z.enum(Object.keys(ACCENTS)).optional(), color: hex.optional(), color2: hex.optional(), gold: hex.optional(), ink: hex.optional() }).optional().describe('plate / pill / button colours'),
   fonts: z.object({ title: font, subtitle: font, location: font, script_word: font, heading: font, tags: font, zoom: font, youtube: font, button: font }).optional(),
+  text_styles: z.record(z.enum(STYLE_LAYERS), z.object({
+    color: z.union([hex, z.literal('')]).optional().describe('#rrggbb, or "" for the original colour'),
+    opacity: z.number().min(0).max(1).optional(),
+    size: z.number().min(0.4).max(2.5).optional().describe('size multiplier, 1 = normal'),
+    spacing: z.number().min(-3).max(30).optional().describe('extra letter spacing in px'),
+    text: z.string().max(40).optional().describe('only for d1dt, d1wd, d2dt, d2wd: replaces the automatic date/weekday text'),
+  })).optional().describe('Per-text colour / opacity / size / spacing. Layers: ttl title, sub subtitle, loc location, scr script word, hd heading, tags, lbL/nmL/plL left label/name/place, lbR/nmR/plR right, d1dt/d1wd/d1tm and d2dt/d2wd/d2tm date, weekday, time, zl zoom heading, zid meeting-id line, zpw password line, yl youtube heading, yh handle, jt button text'),
 };
 
 const clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
@@ -102,6 +110,14 @@ export async function buildFlyer(a) {
   Object.assign(fo, clean({ title: F.title, sub: F.subtitle, loc: F.location, script: F.script_word, heading: F.heading, tags: F.tags, zoom: F.zoom, yt: F.youtube, btn: F.button,
     left: a.left_speaker?.font, right: a.right_speaker?.font, d1: a.date_left?.font, d2: a.date_right?.font }));
   if (Object.keys(fo).length) f.fonts = fo;
+  if (a.text_styles) {
+    const sty = {};
+    for (const [k, v] of Object.entries(a.text_styles)) {
+      const o = clean({ col: v.color, op: v.opacity, sz: v.size, ls: v.spacing, tx: v.text });
+      if (Object.keys(o).length) sty[k] = o;
+    }
+    if (Object.keys(sty).length) f.sty = sty;
+  }
   // The page's own sanitiser fills every missing field from the AGIWM defaults.
   if (f.d1) delete f.d1.font; if (f.d2) delete f.d2.font;
   for (const k of ['left', 'right']) if (f[k]) delete f[k].font;
