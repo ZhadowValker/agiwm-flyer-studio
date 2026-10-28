@@ -9,12 +9,13 @@ import { renderFlyer } from './renderer.js';
 import * as live from './live.js';
 import * as people from './people.js';
 import * as schedule from './schedule.js';
+import { buildInvite } from './invite.js';
 
 const PORT = process.env.PORT || 8080;
 const SECRET = process.env.MCP_SECRET || '';   // protects /mcp/<secret> and /api/*
 const here = path.dirname(fileURLToPath(import.meta.url));
 const STUDIO = process.env.STUDIO_FILE || path.join(here, 'flyer-studio.html');
-const BUILD = 'live-sync+people+dst+textstyle+schedule2+layout+mcp-schedule+free-edit';   // shown at /healthz so you can tell which build is live
+const BUILD = 'live-sync+people+dst+textstyle+schedule2+layout+mcp-schedule+free-edit+invite';   // shown at /healthz so you can tell which build is live
 
 const text = (t) => ({ content: [{ type: 'text', text: t }] });
 const fail = (e) => ({ isError: true, content: [{ type: 'text', text: e.message || String(e) }] });
@@ -108,18 +109,36 @@ function makeServer() {
     title: 'Make all flyers for a monthly schedule',
     description: 'Like plan_schedule, then renders every week as an image (one-off flyers; the live studio flyer is not touched). Add anything shared by all weeks in "common" (zoom details, right speaker, fonts...). Best for sending the month to a WhatsApp group.',
     inputSchema: { text: z.string().max(4000), weekday: z.enum(['sunday','monday','tuesday','wednesday','thursday','friday','saturday']).optional(), time_left: z.string().max(30).optional(), time_right: z.string().max(30).optional(),
-      common: z.object(flyerShape).partial().optional(), ...outOpts },
-  }, async ({ text: t, weekday, time_left, time_right, common = {}, format = 'jpg', size = '1280x720' }) => {
+      common: z.object(flyerShape).partial().optional(), invite_text: z.boolean().optional().describe('also write the WhatsApp invitation text for each week (default true)'), zoom_link: z.string().url().max(300).optional().describe('Zoom invite link to use in the invitation texts'), ...outOpts },
+  }, async ({ text: t, weekday, time_left, time_right, common = {}, invite_text = true, zoom_link, format = 'jpg', size = '1280x720' }) => {
     try {
       const p = await schedule.plan(t, { weekday, timeLeft: time_left, timeRight: time_right });
       const content = [{ type: 'text', text: `Rendered ${p.weeks.length} flyers for ${p.month} ${p.year}: ` + p.weeks.map((w) => `week ${w.week} ${w.speaker} (${w.date})`).join('; ') + (p.weeks.some((w) => !w.photo) ? '. No photo in the library for: ' + p.weeks.filter((w) => !w.photo).map((w) => w.speaker).join(', ') + '.' : '.') }];
       for (const w of p.weeks) {
         const args = { ...common, ...w.args, left_speaker: { ...(common.left_speaker || {}), ...w.args.left_speaker } };
-        const buf = await renderFlyer(await buildFlyer(args), { format, scale: sizeScale(size) });
-        content.push({ type: 'text', text: `Week ${w.week}: ${w.speaker}, ${w.date}` }, { type: 'image', data: buf.toString('base64'), mimeType: format === 'jpg' ? 'image/jpeg' : 'image/png' });
+        const fl = await buildFlyer(args), buf = await renderFlyer(fl, { format, scale: sizeScale(size) });
+        content.push({ type: 'text', text: `Week ${w.week}: ${w.speaker}, ${w.date}` + (invite_text ? '\n\nWhatsApp invitation text for this week:\n\n' + buildInvite(fl, { zoomLink: zoom_link }) : '') }, { type: 'image', data: buf.toString('base64'), mimeType: format === 'jpg' ? 'image/jpeg' : 'image/png' });
       }
       return { content };
     } catch (e) { return fail(new Error('Could not make the schedule: ' + e.message)); }
+  });
+
+  s.registerTool('invite_text', {
+    title: 'WhatsApp invitation text',
+    description: 'Write the WhatsApp invitation message (emoji text with speakers, India and US times, Zoom and YouTube) from the flyer, so the text always matches the image. By default it uses the live flyer open in the studio, hand edits included; give "week" to use a week of the last plan_schedule instead.',
+    inputSchema: { week: z.number().int().min(1).max(5).optional().describe('week of the last plan_schedule; leave out to use the live flyer'),
+      zoom_link: z.string().url().max(300).optional().describe("Zoom's own invite link, if you have it; otherwise a plain link is made from the meeting ID"),
+      closing: z.string().max(120).optional().describe('last line; default "Come and be Blessed!"; empty string for none') },
+  }, async ({ week, zoom_link, closing }) => {
+    try {
+      let src;
+      if (week) {
+        const p = schedule.lastPlan(); if (!p) throw new Error('Plan a schedule first (plan_schedule).');
+        const w = p.weeks.find((x) => x.week === week); if (!w) throw new Error(`Week ${week} is not in the plan (planned: ${p.weeks.map((x) => x.week).join(', ')}).`);
+        src = await buildFlyer(w.args);
+      } else src = live.get().flyer;
+      return text(buildInvite(src, { zoomLink: zoom_link, closing }));
+    } catch (e) { return fail(e); }
   });
 
   s.registerTool('publish_week', {
@@ -178,9 +197,11 @@ app.post('/api/schedule', authed, async (req, res) => {
   try { const { text: t, weekday, time_left, time_right } = req.body || {}; const p = await schedule.plan(t, { weekday, timeLeft: time_left, timeRight: time_right }); res.json({ month: p.month, year: p.year, weeks: p.weeks.map(({ week, speaker, date, usDate, photo }) => ({ week, speaker, date, usDate, photo })), skipped: p.skipped }); }
   catch (e) { res.status(400).json({ error: e.message }); }
 });
+app.get('/api/invite', authed, (req, res) => res.type('text').send(buildInvite(live.get().flyer, { zoomLink: req.query.zoom, closing: req.query.closing })));   // WhatsApp invitation text for the live flyer
 app.get('/api/schedule/:n.:ext', authed, async (req, res) => {
   try {
     const p = schedule.lastPlan(), w = p && p.weeks.find((x) => x.week === +req.params.n); if (!w) return res.status(404).json({ error: 'No such week in the last plan.' });
+    if (req.params.ext === 'txt') return res.type('text').send(buildInvite(await buildFlyer(w.args), { zoomLink: req.query.zoom, closing: req.query.closing }));
     const fmt = req.params.ext === 'jpg' ? 'jpg' : 'png'; const buf = await renderFlyer(await buildFlyer(w.args), { format: fmt, scale: sizeScale(req.query.size || '1280x720') });
     res.type(fmt === 'jpg' ? 'jpeg' : 'png').send(buf);
   } catch (e) { res.status(500).json({ error: e.message }); }

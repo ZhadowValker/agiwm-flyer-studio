@@ -46,3 +46,30 @@ Nothing is grouped: every text and every object (logo, speaker cards, time boxes
 ## Studio layouts
 
 The header button cycles Floating (default), Slides and Photoshop. Floating: canvas first, a tool bar at the bottom (Move, Text, Photo, Colour, Dates, Layers, Flyers, AI) and a card with the options. Download menu: PNG/JPG sizes, JPG for WhatsApp, and all flyers as one zip.
+
+## WhatsApp invitation text
+
+The same fields that draw the flyer also write the invitation message, so the text and the image always match:
+
+```
+🙏 AGIWM Women's Prayer Meeting
+
+📖 Word: Evangelist Preethi Reddy
+🎶 Worship: Sis. Dolly Priyadarshini & Bro. Jonah
+
+🇮🇳 31 Oct, 6:30 AM IST
+🇺🇸 30 Oct, 9:00 PM EDT
+
+💻 Zoom: https://zoom.us/j/9969598014
+ID: 996 959 8014 | Passcode: 202022
+
+▶️ YouTube: https://www.youtube.com/@AGIMUSA
+
+Come and be Blessed! 🙌
+```
+
+- **Studio:** the "Invite text" button in the top bar (or File menu > Invite text for WhatsApp) opens the message. Edit it, copy it, or send it on WhatsApp. Paste Zoom's own invite link in the box if you have one (it is remembered in this browser); otherwise a plain link is made from the meeting ID.
+- **Connector:** `invite_text` returns the message for the live flyer, or for week N of the last `plan_schedule`. `make_schedule` also returns each week's text next to its image.
+- **API (for the bot):** `GET /api/invite?k=...` for the live flyer, `GET /api/schedule/2.txt?k=...` for week 2. Optional `zoom=` and `closing=`.
+- Names typed in capitals on the flyer are written in normal capitals in the message. Hidden speakers, dates, Zoom or YouTube are left out.
+- The code is in `invite.js`; the studio build inlines the same file.

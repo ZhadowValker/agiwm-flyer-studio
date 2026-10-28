@@ -165,6 +165,7 @@ dialog.aid .nt{color:var(--ui-dim);font-size:12.5px;margin:0 0 12px}
 dialog.aid label{display:block;margin:0 0 10px}
 dialog.aid label>span{display:block;font-size:12px;color:var(--ui-dim);margin-bottom:4px}
 dialog.aid input,dialog.aid select{width:100%;box-sizing:border-box;background:var(--ui-bg);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:8px;padding:8px 10px;font:inherit}
+dialog.aid textarea{width:100%;box-sizing:border-box;background:var(--ui-bg);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:8px;padding:9px 10px;font:inherit;line-height:1.45;resize:vertical}
 dialog.aid .st{min-height:20px;font-size:12.5px;color:var(--ui-dim);margin:2px 0 10px}
 dialog.aid .st[data-k=ok]{color:#6bd98a} dialog.aid .st[data-k=bad]{color:#ff8b8e}
 dialog.aid .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
@@ -189,6 +190,7 @@ dialog.aid .acts .btn{color:var(--ui-text)} dialog.aid .acts .btn.primary{color:
 #liveFeed .acts .btn{color:var(--ui-text);font-size:13px;padding:5px 11px}
 
 @media (max-width:760px){
+  #invBtn{display:none}
   .title-in{width:150px}
   .dim.stat{display:none}
   #workspace{flex-direction:column}
@@ -310,6 +312,7 @@ html.fd #pill{display:flex;position:fixed;left:50%;transform:translateX(-50%);bo
     <span class="dim stat" id="status">Not saved yet</span>
     <button id="liveBtn" type="button" data-s="off" aria-label="Live link"><i></i><span>Go live</span></button>
     <span class="grow"></span>
+    <button class="btn" id="invBtn" type="button" title="Make the WhatsApp invitation text for this flyer"><span>Invite text</span></button>
     <button class="btn" id="uiStyle" type="button" title="Switch between the Slides layout and the Photoshop layout" aria-pressed="false"><span>Layout: Slides</span></button>
     <button class="ico" id="undo" type="button" aria-label="Undo" title="Undo (Ctrl+Z)" disabled><i data-ic="undo"></i></button>
     <button class="ico" id="redo" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled><i data-ic="redo"></i></button>
@@ -1278,6 +1281,7 @@ $('#fileBtn').addEventListener('click',function(e){
   e.stopPropagation();
   menu(this,[
     {label:'Make flyers from a schedule...',fn:scheduleDlg},
+    {label:'Invite text for WhatsApp...',fn:inviteDlg},
     {label:'Download all flyers (zip)',fn:function(){downloadAll();}},
     '-',
     {label:'Save template',hint:'.json',fn:saveTemplate},
@@ -1292,6 +1296,7 @@ $('#addBtn').addEventListener('click',function(e){
     {label:'Duplicate this flyer',fn:function(){duplicate(deck.i);}},
     {label:'New flyer, original layout',fn:addBlank},
     {label:'Make flyers from a schedule...',fn:scheduleDlg},
+    {label:'Invite text for WhatsApp...',fn:inviteDlg},
     '-',
     {label:'Download all flyers (zip)',fn:function(){downloadAll();}}
   ]);
@@ -1379,6 +1384,129 @@ function makeSchedule(txt){
   deck.i=deck.flyers.indexOf(made[0]);bind();syncAll();render();drawStrip();updCounter();buildBar();pushHist();persist();
   return {n:made.length,skipped:skipped,month:MONTHS[mo],year:yr};
 }
+// Builds the WhatsApp invitation text from a flyer state, so the text and the image always match.
+// One source for two users: the connector imports it, and the studio build inlines it
+// (the "export" line at the bottom is stripped there). Keep this file ASCII only.
+
+var INVITE_DEFAULTS = {
+  title: 'AGIWM', script: 'Women\u2019s', heading: 'Prayer Meeting',
+  left: { show: true, label: 'Word by', name: 'DR MANJULA CHARAN' },
+  right: { show: true, label: 'Worship by', name: 'SIS SHANTA KUMARI & FAMILY' },
+  d1: { show: true, flag: 'in', date: '2026-10-24', time: '6:30 AM IST' },
+  d2: { show: true, flag: 'us', date: '2026-10-23', time: '9:00 PM EDT' },
+  zoom: { show: true, id: '9969598014', pass: '202022' },
+  yt: { show: true, handle: '@AGIMUSA' }
+};
+var INV_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+var INV_FLAG = { 'in': '\u{1F1EE}\u{1F1F3}', us: '\u{1F1FA}\u{1F1F8}', uk: '\u{1F1EC}\u{1F1E7}', ca: '\u{1F1E8}\u{1F1E6}' };
+
+function invSec(s, k) {
+  var o = {}, d = INVITE_DEFAULTS[k], v = s && s[k], a;
+  if (d) for (a in d) o[a] = d[a];
+  if (v && typeof v === 'object') for (a in v) if (v[a] !== undefined && v[a] !== null) o[a] = v[a];
+  return o;
+}
+function invStr(v, dflt) { return (v === undefined || v === null ? dflt : String(v)).replace(/\u2019/g, "'").replace(/\s+/g, ' ').trim(); }
+// Names typed in capitals for the flyer read as shouting in a chat, so "DR MANJULA CHARAN" becomes "Dr Manjula Charan".
+function invName(n) {
+  n = invStr(n, '');
+  if (n && n === n.toUpperCase() && n !== n.toLowerCase())
+    n = n.toLowerCase().replace(/(^|[\s\-(])([a-z\u00c0-\u024f])/g, function (m, a, b) { return a + b.toUpperCase(); });
+  return n;
+}
+function invDate(iso) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+  return m && +m[2] >= 1 && +m[2] <= 12 ? (+m[3]) + ' ' + INV_MON[+m[2] - 1] : '';
+}
+function invGroup(d) {
+  if (d.length === 10) return d.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+  if (d.length === 11) return d.replace(/(\d{3})(\d{4})(\d{4})/, '$1 $2 $3');
+  if (d.length === 9) return d.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+  return d;
+}
+
+// s: a flyer state (full or partial; anything missing falls back to the AGIWM defaults).
+// opt: { zoomLink: 'https://zoom.us/j/...?pwd=...' to use Zoom's own invite link, closing: 'last line' }
+function buildInvite(s, opt) {
+  opt = opt || {};
+  var blocks = [], g;
+  var title = [invStr(s && s.title, INVITE_DEFAULTS.title), invStr(s && s.script, INVITE_DEFAULTS.script), invStr(s && s.heading, INVITE_DEFAULTS.heading)].filter(Boolean).join(' ');
+  blocks.push('\u{1F64F} ' + title);
+
+  var sp = [];
+  [['left', '\u{1F4D6}', 'Word'], ['right', '\u{1F3B6}', 'Worship']].forEach(function (x) {
+    var c = invSec(s, x[0]), nm = invName(c.name);
+    if (c.show === false || !nm) return;
+    var lb = invStr(c.label, '').replace(/\s*:?\s+by\s*:?$/i, '').replace(/:$/, '').trim() || x[2];
+    sp.push(x[1] + ' ' + lb + ': ' + nm);
+  });
+  if (sp.length) blocks.push(sp.join('\n'));
+
+  var ds = [];
+  ['d1', 'd2'].forEach(function (k) {
+    var c = invSec(s, k);
+    if (c.show === false) return;
+    var when = [invDate(c.date), invStr(c.time, '')].filter(Boolean).join(', ');
+    if (when) ds.push((INV_FLAG[c.flag] || '\u{1F5D3}\ufe0f') + ' ' + when);
+  });
+  if (ds.length) blocks.push(ds.join('\n'));
+
+  var z = invSec(s, 'zoom');
+  if (z.show !== false) {
+    var digits = String(z.id == null ? '' : z.id).replace(/\D/g, ''), pass = invStr(z.pass, '');
+    var link = /^https:\/\/\S+$/.test(String(opt.zoomLink || '').trim()) ? String(opt.zoomLink).trim() : (digits.length >= 9 ? 'https://zoom.us/j/' + digits : '');
+    var zl = [];
+    if (link || digits) zl.push('\u{1F4BB} Zoom' + (link ? ': ' + link : ''));
+    var idp = [];
+    if (digits) idp.push('ID: ' + invGroup(digits));
+    if (pass) idp.push('Passcode: ' + pass);
+    if (idp.length) zl.push(idp.join(' | '));
+    if (zl.length) blocks.push(zl.join('\n'));
+  }
+
+  var y = invSec(s, 'yt');
+  if (y.show !== false) {
+    var h = invStr(y.handle, '');
+    if (h) blocks.push('\u25b6\ufe0f YouTube: ' + (/^https?:\/\//i.test(h) ? h : 'https://www.youtube.com/@' + h.replace(/^@/, '')));
+  }
+
+  var end = opt.closing === undefined ? 'Come and be Blessed! \u{1F64C}' : invStr(opt.closing, '');
+  if (end) blocks.push(end);
+  return blocks.join('\n\n');
+}
+
+
+
+function legacyCopy(t,host){return new Promise(function(res,rej){var a=document.createElement('textarea');a.value=t;a.setAttribute('aria-hidden','true');a.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';(host||document.body).appendChild(a);a.select();var ok=false;try{ok=document.execCommand('copy');}catch(e){}a.remove();if(ok)res();else rej(new Error('copy'));});}
+function copyText(t,host){
+  if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t).catch(function(){return legacyCopy(t,host);});
+  return legacyCopy(t,host);
+}
+function inviteDlg(){
+  var dlg=document.createElement('dialog');dlg.className='aid';dlg.style.width='min(560px,94vw)';
+  dlg.innerHTML='<form method="dialog" id="invF"><h2>Invite text for WhatsApp</h2>'
+   +'<p class="nt">Made from this flyer, so the words and the picture always match. Change anything you like, then copy it or send it on WhatsApp.</p>'
+   +'<label><span>Zoom link (optional). Paste the invite link from Zoom if you have one; otherwise a plain link is made from the meeting ID.</span><input id="invZ" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://zoom.us/j/..."></label>'
+   +'<label><span>Message</span><textarea id="invT" rows="14"></textarea></label>'
+   +'<p class="st" id="invS" role="status"></p><div class="acts"><button type="button" class="btn" id="invC">Close</button><button type="button" class="btn" id="invR">Rebuild</button><button type="button" class="btn" id="invK">Copy</button><button type="button" class="btn primary" id="invW">Send on WhatsApp</button></div></form>';
+  document.body.appendChild(dlg);dlg.showModal();
+  var q=function(i){return dlg.querySelector(i);},KEY='agiwm-zoomlink';
+  try{q('#invZ').value=localStorage.getItem(KEY)||'';}catch(e){}
+  function say(m,k){var s=q('#invS');s.textContent=m;s.setAttribute('data-k',k||'');}
+  function build(){q('#invT').value=buildInvite(state,{zoomLink:q('#invZ').value});}
+  function close(){dlg.close();dlg.remove();}
+  build();
+  q('#invZ').addEventListener('input',function(){try{localStorage.setItem(KEY,q('#invZ').value.trim());}catch(e){}build();say('','');});
+  q('#invR').addEventListener('click',function(){build();say('Rebuilt from the flyer.','ok');});
+  q('#invK').addEventListener('click',function(){copyText(q('#invT').value,dlg).then(function(){say('Copied. Paste it into WhatsApp.','ok');},function(){say('Could not copy here. Select the text and copy it by hand.','bad');});});
+  q('#invW').addEventListener('click',function(){var t=q('#invT').value.trim();if(!t)return;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank','noopener');});
+  q('#invC').addEventListener('click',close);
+  q('#invF').addEventListener('submit',function(e){e.preventDefault();});
+  dlg.addEventListener('cancel',function(e){e.preventDefault();close();});
+  setTimeout(function(){q('#invT').focus();q('#invT').setSelectionRange(0,0);},30);
+}
+$('#invBtn').addEventListener('click',inviteDlg);
+
 function scheduleDlg(){
   var dlg=document.createElement('dialog');dlg.className='aid';
   dlg.innerHTML='<form method="dialog" id="schF"><h2>Flyers from a schedule</h2><p class="nt">Paste the monthly list, one speaker per week. One flyer is made for each line, using the current flyer as the template (same times, Zoom, right speaker and style). The speaker goes in the left card; add each photo afterwards. The weekday is taken from this flyer\'s first date.</p>'

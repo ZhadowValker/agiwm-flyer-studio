@@ -44,5 +44,13 @@ try{
   chk('UI shows week 2 speaker',(await pg.innerText('#stage')).toUpperCase().includes('DR NIRMALA')&&(await pg.innerText('#stage')).includes('14'));
   const sp=await fetch(B+'/api/schedule?k=s3cret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:SCH})}); chk('api schedule',(await sp.json()).weeks.length===4);
   const im3=await fetch(B+'/api/schedule/3.png?k=s3cret'); chk('api week 3 png',im3.ok&&(await im3.arrayBuffer()).byteLength>5000);
+  // invitation text
+  const tl=(await c.listTools()).tools.map(t=>t.name); chk('invite_text tool listed',tl.includes('invite_text'));
+  const iv=await c.callTool({name:'invite_text',arguments:{week:3,zoom_link:'https://zoom.us/j/9969598014?pwd=XYZ'}}); const ivt=iv.content[0].text; console.log(ivt);
+  chk('invite week 3 has speaker, date and zoom link',/Word: Ruth J Amma/.test(ivt)&&/21 Nov/.test(ivt)&&/20 Nov/.test(ivt)&&ivt.includes('pwd=XYZ'));
+  const ivl=await c.callTool({name:'invite_text',arguments:{}}); chk('invite from live flyer follows hand edit',/Word: Dr Nirmala/.test(ivl.content[0].text)&&/ID: 999 888 7777/.test(ivl.content[0].text));
+  const ms2=await c.callTool({name:'make_schedule',arguments:{text:SCH,size:'1280x720',format:'jpg'}}); chk('make_schedule includes invitation text',ms2.content.filter(x=>x.type==='text'&&/WhatsApp invitation text/.test(x.text)).length===4);
+  const ai=await fetch(B+'/api/invite?k=s3cret'); chk('api invite is text',ai.ok&&(await ai.text()).startsWith('\u{1F64F}'));
+  const at=await fetch(B+'/api/schedule/2.txt?k=s3cret'); const att=await at.text(); chk('api week 2 txt',at.ok&&/Dr Nirmala Sathyanandam Garu/.test(att));
   console.log('page errors',errs); await br.close();
 }catch(e){console.log('ERR',e); ok=false;} finally{srv.kill(); console.log(ok?'ALL OK':'SOME FAILED'); process.exit(0);}
