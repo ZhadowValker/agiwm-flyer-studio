@@ -1,5 +1,7 @@
 // Maps friendly tool input onto the studio's flyer state.
 import { z } from 'zod';
+import * as people from './people.js';
+import { shrinkImage } from './renderer.js';
 
 export const FONTS = ['Montserrat','Poppins','Oswald','Bebas Neue','Anton','Playfair Display','Cinzel','Cormorant Garamond','Lora','Great Vibes','Allura','Dancing Script','Pacifico','Noto Sans Telugu','Noto Serif Telugu'];
 export const FLAGS = ['none','in','us','uk','ca'];
@@ -12,6 +14,7 @@ const photo = z.string().describe('https URL or data:image URL of the photo').op
 
 const person = z.object({
   show: z.boolean().optional(), label: z.string().max(60).optional().describe('small script label, e.g. "Word by"'),
+  person: z.string().max(80).optional().describe('someone in the photo library (e.g. "Pastor Elizabeth Amara"): fills their photo, and their name if you give none'),
   name: z.string().max(60).optional(), place: z.string().max(60).optional().describe('second line, e.g. "Hyderabad, India."'),
   photo_url: photo, zoom: z.number().min(1).max(4).optional(), offset_x: z.number().min(-100).max(100).optional(), offset_y: z.number().min(-100).max(100).optional(), font,
 }).optional();
@@ -52,7 +55,8 @@ async function toDataUrl(src) {
   if (!/^image\/(png|jpeg|webp|gif)$/.test(type)) throw new Error(`${src} is not a PNG, JPG, WebP or GIF image.`);
   const buf = Buffer.from(await r.arrayBuffer());
   if (buf.length > 8 * 1024 * 1024) throw new Error('Photo is over 8 MB.');
-  return `data:${type};base64,${buf.toString('base64')}`;
+  const raw = `data:${type};base64,${buf.toString('base64')}`;
+  return buf.length > 350 * 1024 ? await shrinkImage(raw, 1000) : raw;
 }
 
 export async function buildFlyer(a) {
@@ -62,6 +66,12 @@ export async function buildFlyer(a) {
   for (const [key, src] of [['left', a.left_speaker], ['right', a.right_speaker]]) {
     if (!src) continue;
     const o = clean({ show: src.show, label: src.label, name: src.name, place: src.place, z: src.zoom, x: src.offset_x, y: src.offset_y });
+    if (src.person) {
+      const p = await people.find(src.person);
+      o.photo = p.dataUrl; o.z = o.z ?? 1; o.x = o.x ?? 0; o.y = o.y ?? 0;
+      if (src.name === undefined) o.name = p.name.toUpperCase();
+      if (src.place === undefined && p.place) o.place = p.place;
+    }
     if (src.photo_url !== undefined) o.photo = await toDataUrl(src.photo_url);
     f[key] = o;
   }
@@ -96,4 +106,17 @@ export async function buildFlyer(a) {
   if (f.d1) delete f.d1.font; if (f.d2) delete f.d2.font;
   for (const k of ['left', 'right']) if (f[k]) delete f[k].font;
   return f;
+}
+
+// One short line for the live feed, e.g. "left speaker: name=PASTOR X; dates".
+export function describe(a) {
+  const bits = [];
+  for (const [k, v] of Object.entries(a)) {
+    if (v === undefined || ['format', 'size', 'preview', 'by'].includes(k)) continue;
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      const inner = Object.entries(v).filter(([ik, iv]) => iv !== undefined && !/photo_url|image_url/.test(ik)).map(([ik, iv]) => `${ik}=${typeof iv === 'object' ? '...' : String(iv).slice(0, 40)}`).join(', ');
+      bits.push(`${k.replace(/_/g, ' ')}: ${inner}`);
+    } else bits.push(`${k.replace(/_/g, ' ')}: ${Array.isArray(v) ? v.join(' / ') : String(v).slice(0, 60)}`);
+  }
+  return bits.join('; ') || 'no changes';
 }

@@ -1,28 +1,33 @@
-# AGIWM Flyer Studio MCP
+# AGIWM Flyer Studio server
 
-A remote MCP server (Streamable HTTP) that lets Claude make the AGIWM Women's Prayer Meeting flyer.
-It loads `flyer-studio.html` (the same studio page) in headless Chromium, fills it from the tool
-arguments, and returns the finished 2000x1125 PNG/JPG.
+One Node app that serves the flyer studio (`/`), the Claude connector (`/mcp/<secret>`) and a small live API (`/api/*`).
+
+## Live flyer
+The server keeps one **live flyer**. Anyone with the studio open and connected sees it change at once:
+- Claude: `update_flyer` changes only the fields you name; changes build up across messages. Hand edits made in the studio are visible to Claude (`get_flyer`, `render_current_flyer`).
+- The studio shows each instruction in its **Live** panel (top bar).
+- Connect a browser once by opening `https://YOUR-HOST/#live=<secret>` (the key is stored in that browser).
+
+## Photo library
+Put photos in `DATA_DIR/photos` named after the person (`Pastor_Elizabeth_Amara.jpg`), or use the `add_person` tool. Then use `"person": "Pastor Elizabeth"` on a speaker and the photo (and name) are filled in. Optional details (aliases, place) live in `DATA_DIR/people.json`:
+`{"Pastor_Elizabeth_Amara": {"name": "Pastor Elizabeth Amara", "aliases": ["Pr Elizabeth"], "place": "Maryland, USA"}}`
 
 ## Tools
-- `make_flyer` – every field optional; leave out what stays default. Names, dates (YYYY-MM-DD, weekday and "24th" are automatic),
-  times, flags, Zoom ID/passcode, YouTube handle, button text, photos and background image (https or data URLs),
-  background gradient/preset/colour, accent colours, fonts per text. `format`: png|jpg, `size`: 2000x1125|1920x1080|1280x720.
-- `flyer_options` – lists fonts, flags, presets and the AGIWM defaults.
+`update_flyer`, `get_flyer`, `reset_flyer`, `render_current_flyer`, `make_flyer` (one-off, does not touch the live flyer), `list_people`, `add_person`, `remove_person`, `flyer_options`.
+
+## HTTP API (for a WhatsApp bot later)
+All need the key: `?k=<secret>` or header `x-flyer-key`.
+- `POST /api/patch` with the same fields as `update_flyer` (plus `"by":"WhatsApp"`) changes the live flyer.
+- `GET /api/render.png?size=1280x720` returns the current flyer as an image.
+- `GET /api/state`, `GET /api/people`, `GET /api/live` (server-sent events).
+A WhatsApp bot would: receive the group message, ask an AI to turn it into an `update_flyer`-style JSON, `POST /api/patch`, then send back `GET /api/render.png`.
+
+## Settings (environment variables)
+- `MCP_SECRET` (required in production): protects the connector and the API.
+- `DATA_DIR`: where the live flyer and photo library are kept. Point it outside the app folder (for example `/home/<you>/flyer-data`) so redeploys do not erase it.
+- `PORT`: set by the host.
 
 ## Run locally
-    npm install && npx playwright install chromium
-    npm start            # http://localhost:8080/mcp
-    npm test             # end-to-end call over MCP
-
-## Deploy (hosted)
-Any Docker host works (Render, Fly.io, Railway, Cloud Run). Build with the included `Dockerfile`
-(Playwright image, ~1 GB RAM recommended). Set `MCP_SECRET=<long random string>` so the endpoint becomes
-`https://YOUR-HOST/mcp/<secret>` (keeps strangers from using your server).
-
-## Add to Claude
-Settings > Connectors > Add custom connector > paste `https://YOUR-HOST/mcp/<secret>`.
-Then ask: "Make the AGIWM flyer for Nov 7 with speaker Pastor Elizabeth Amara, emerald theme."
-
-Notes: the server needs internet access at render time (Google Fonts, html2canvas from cdnjs).
-Gradient text is not supported by the exporter; renders are queued one at a time.
+    npm install
+    MCP_SECRET=test npm start       # http://localhost:8080
+Chromium is bundled (`@sparticuz/chromium`); `CHROMIUM_PATH` can point at a system Chrome instead.

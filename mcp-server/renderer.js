@@ -91,3 +91,22 @@ async function doRender(flyer, { format, scale, name }) {
 }
 
 export async function closeBrowser() { if (browserP) { (await browserP).close(); browserP = null; } }
+
+// Shrink an image (data URL) to at most `max` px on its long side, as JPEG, using the headless browser's canvas.
+export async function shrinkImage(dataUrl, max = 1000) {
+  const b = await browser();
+  const ctx = await b.newContext();
+  const page = await ctx.newPage();
+  try {
+    await page.setContent('<canvas id=c></canvas>');
+    return await page.evaluate(async ([u, m]) => {
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('That file is not a readable image.')); img.src = u; });
+      const k = Math.min(1, m / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.getElementById('c');
+      c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      return c.toDataURL('image/jpeg', 0.88);
+    }, [dataUrl, max]);
+  } finally { await ctx.close(); }
+}

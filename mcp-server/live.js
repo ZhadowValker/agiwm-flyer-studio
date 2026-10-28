@@ -1,0 +1,51 @@
+// The shared "current flyer": Claude (MCP), the studio page(s) and later the WhatsApp bot all read and change it here.
+import fs from 'node:fs';
+import path from 'node:path';
+
+const DATA = process.env.DATA_DIR || path.join(path.dirname(new URL(import.meta.url).pathname), 'data');
+const FILE = path.join(DATA, 'live-flyer.json');
+fs.mkdirSync(DATA, { recursive: true });
+
+let st = { version: 0, flyer: {}, feed: [] };
+try { st = { ...st, ...JSON.parse(fs.readFileSync(FILE, 'utf8')) }; } catch {}
+const clients = new Set();
+
+const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+export function deepMerge(a, b) {
+  const out = { ...a };
+  for (const k of Object.keys(b)) out[k] = isObj(b[k]) && isObj(a[k]) ? deepMerge(a[k], b[k]) : b[k];
+  return out;
+}
+function save() { try { fs.writeFileSync(FILE, JSON.stringify(st)); } catch (e) { console.warn('could not save live flyer:', e.message); } }
+function emit(origin, entry) {
+  const data = JSON.stringify({ version: st.version, flyer: st.flyer, entry, origin });
+  for (const c of clients) c.write(`data: ${data}\n\n`);
+}
+function note(by, text) {
+  const entry = { t: Date.now(), by, text: String(text).slice(0, 300) };
+  st.feed = [entry, ...st.feed].slice(0, 40); return entry;
+}
+
+export const get = () => ({ version: st.version, flyer: st.flyer, feed: st.feed.slice(0, 20) });
+
+// A change from Claude / a bot: merge the named fields into the current flyer.
+export function patch(appShapePartial, { by = 'Claude', text = 'Updated the flyer' } = {}) {
+  st.flyer = deepMerge(st.flyer, appShapePartial); st.version++;
+  const e = note(by, text); save(); emit('server', e); return st.version;
+}
+// The studio page sent its whole flyer. '@keep' means "keep the photo you already have".
+export function replace(flyer, client, { by = 'Studio', text } = {}) {
+  const f = JSON.parse(JSON.stringify(flyer || {}));
+  for (const [p, k] of [['left', 'photo'], ['right', 'photo'], ['bg', 'img']]) if (f[p] && f[p][k] === '@keep') f[p][k] = st.flyer[p]?.[k] ?? '';
+  st.flyer = f; st.version++;
+  const e = text ? note(by, text) : null; save(); emit(client || 'unknown', e); return st.version;
+}
+export function reset(by = 'Claude') { st.flyer = {}; st.version++; const e = note(by, 'Reset the flyer to the original layout'); save(); emit('server', e); return st.version; }
+
+export function subscribe(req, res) {
+  res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
+  res.write('retry: 2000\n\n');
+  clients.add(res);
+  const ka = setInterval(() => res.write(': keep-alive\n\n'), 20000);
+  req.on('close', () => { clearInterval(ka); clients.delete(res); });
+}
