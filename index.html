@@ -760,6 +760,14 @@ function dateParts(v){
   var sfx=(n%10===1&&n!==11)?'st':(n%10===2&&n!==12)?'nd':(n%10===3&&n!==13)?'rd':'th';
   return{n:n,sfx:sfx,mon:['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()],y:d.getFullYear(),wd:['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'][d.getDay()]};
 }
+/* US time zone names follow daylight saving by date: EDT from the 2nd Sunday of March to the 1st Sunday of November, otherwise EST (same for C, M, P). */
+function usTz(date,time){
+  var m=/^(.*?)(\s*)\b([ECMP])[DS]T\s*$/i.exec(time||'');if(!m)return time;
+  var d=String(date||'').split('-').map(Number);if(d.length!==3||!d[0])return time;
+  function nth(y,mon,n){var f=new Date(Date.UTC(y,mon,1)).getUTCDay();return 1+((7-f)%7)+(n-1)*7;}
+  var t=Date.UTC(d[0],d[1]-1,d[2]),dst=t>=Date.UTC(d[0],2,nth(d[0],2,2))&&t<Date.UTC(d[0],10,nth(d[0],10,1));
+  return m[1]+m[2]+m[3].toUpperCase()+(dst?'D':'S')+'T';
+}
 function renderDate(card,d){
   show(card,d.show,'flex');
   var fl=$('.flag',card),F=FLAGS[d.flag];fl.textContent='';
@@ -769,7 +777,7 @@ function renderDate(card,d){
   T_('.wd',p?p.wd:'',card);
   fit(dt,372,58,30);
   var tm=$('.tm',card),s2=46;tm.style.fontSize=s2+'px';
-  var probe=document.createElement('span');probe.style.display='inline-block';probe.textContent=d.time;tm.textContent='';tm.appendChild(probe);
+  var probe=document.createElement('span');probe.style.display='inline-block';probe.textContent=usTz(d.date,d.time);tm.textContent='';tm.appendChild(probe);
   while(probe.offsetWidth>340&&s2>24){s2-=2;tm.style.fontSize=s2+'px';}
 }
 function layoutDates(){
@@ -1154,7 +1162,7 @@ function systemPrompt(){
   return 'You edit one weekly prayer-meeting flyer for AGIWM (Amazing God International Women\'s Ministries). Today is '+iso+' ('+['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][t.getDay()]+').\n'
   +'Reply with ONE JSON object only, no other text: {"reply":"short friendly sentence on what you did or a question","set":{"path":value},"presets":{"bg":"name","accent":"name"}}. "set" and "presets" are optional; leave them out when nothing changes.\n'
   +'"set" uses dotted paths into the flyer JSON you are given. You may set only these paths: '+Object.keys(PATHS).join(', ')+'.\n'
-  +'Rules: text fields are plain text, under 100 characters. Dates are YYYY-MM-DD (the weekday and 24th/7th style are automatic). d1 is the left date card (India, flag "in", time in IST); d2 is the right card (USA, flag "us", time in EDT/EST). When the user gives one meeting time, convert it for the other card (IST is 9.5 hours ahead of EDT and 10.5 hours ahead of EST); the US evening is usually the day before in India. Flags: none, in, us, uk, ca. Booleans: show flags (true/false). Colours: #RRGGBB. bg.lighten and bg.glow are numbers 0 to 1; bg.ang 0 to 360; left.z and right.z (photo zoom) 1 to 4. fonts.* is "" (original) or one of: '+FONTLIST.map(function(f){return f.n;}).join(', ')+'.\n'
+  +'Rules: text fields are plain text, under 100 characters. Dates are YYYY-MM-DD (the weekday and 24th/7th style are automatic). d1 is the left date card (India, flag "in", time in IST); d2 is the right card (USA, flag "us", time in EDT/EST). When the user gives one meeting time, convert it for the other card. IST is UTC+5:30. US Eastern is EDT (UTC-4, IST is 9.5 hours ahead) from the second Sunday of March until the first Sunday of November, and EST (UTC-5, IST is 10.5 hours ahead) the rest of the year; for example 9:00 PM EDT is 6:30 AM IST next day, but 9:00 PM EST is 7:30 AM IST next day. Daylight saving ends on 1 Nov 2026 and starts on 14 Mar 2027. Write EDT or EST to match the date of that card (the page also corrects the label automatically). The US evening is usually the day before in India. Flags: none, in, us, uk, ca. Booleans: show flags (true/false). Colours: #RRGGBB. bg.lighten and bg.glow are numbers 0 to 1; bg.ang 0 to 360; left.z and right.z (photo zoom) 1 to 4. fonts.* is "" (original) or one of: '+FONTLIST.map(function(f){return f.n;}).join(', ')+'.\n'
   +'Backgrounds: set presets.bg to one of '+BGP.map(function(p){return p[0];}).join(', ')+'. Accent colours: presets.accent one of '+ACP.map(function(p){return p[0];}).join(', ')+'. For other colours set bg.grad=true with bg.g1 and bg.g2, or bg.grad=false with bg.base; accent colour is col.maroon (and col.accent2 for the gradient end).\n'
   +'You cannot add photos; if asked, tell the user to use the Photos tool. Change only what the user asked for. Keep names in the style they use (speaker names are usually UPPERCASE).';
 }

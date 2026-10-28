@@ -10,6 +10,17 @@ let st = { version: 0, flyer: {}, feed: [] };
 try { st = { ...st, ...JSON.parse(fs.readFileSync(FILE, 'utf8')) }; } catch {}
 const clients = new Set();
 
+// US zone names follow daylight saving by date (EDT from the 2nd Sunday of March to the 1st Sunday of November, else EST).
+export function usTz(date, time) {
+  const m = /^(.*?)(\s*)\b([ECMP])[DS]T\s*$/i.exec(time || ''), d = String(date || '').split('-').map(Number);
+  if (!m || d.length !== 3 || !d[0]) return time;
+  const nth = (y, mon, n) => 1 + ((7 - new Date(Date.UTC(y, mon, 1)).getUTCDay()) % 7) + (n - 1) * 7;
+  const t = Date.UTC(d[0], d[1] - 1, d[2]);
+  const dst = t >= Date.UTC(d[0], 2, nth(d[0], 2, 2)) && t < Date.UTC(d[0], 10, nth(d[0], 10, 1));
+  return m[1] + m[2] + m[3].toUpperCase() + (dst ? 'D' : 'S') + 'T';
+}
+function fixZones(f) { for (const k of ['d1', 'd2']) if (f[k]?.time && f[k]?.date) f[k].time = usTz(f[k].date, f[k].time); return f; }
+
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 export function deepMerge(a, b) {
   const out = { ...a };
@@ -30,7 +41,7 @@ export const get = () => ({ version: st.version, flyer: st.flyer, feed: st.feed.
 
 // A change from Claude / a bot: merge the named fields into the current flyer.
 export function patch(appShapePartial, { by = 'Claude', text = 'Updated the flyer' } = {}) {
-  st.flyer = deepMerge(st.flyer, appShapePartial); st.version++;
+  st.flyer = fixZones(deepMerge(st.flyer, appShapePartial)); st.version++;
   const e = note(by, text); save(); emit('server', e); return st.version;
 }
 // The studio page sent its whole flyer. '@keep' means "keep the photo you already have".

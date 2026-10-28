@@ -20,7 +20,7 @@ const person = z.object({
 }).optional();
 const dateBox = z.object({
   show: z.boolean().optional(), flag: z.enum(FLAGS).optional(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('YYYY-MM-DD; weekday and 24th style are automatic'),
-  time: z.string().max(30).optional().describe('e.g. "6:30 AM IST"'), font,
+  time: z.string().max(30).optional().describe('e.g. "6:30 AM IST" or "9:00 PM EST". US zones follow daylight saving: EDT from the 2nd Sunday of March to the 1st Sunday of November (ends 1 Nov 2026, starts 14 Mar 2027), otherwise EST; IST is 9.5h ahead of EDT, 10.5h ahead of EST. The label is corrected to match the date.'), font,
 }).optional();
 
 export const flyerShape = {
