@@ -1,4 +1,5 @@
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-core';
+import sparticuz from '@sparticuz/chromium';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
@@ -8,8 +9,13 @@ const HTML = process.env.FLYER_HTML || path.join(here, 'flyer-studio.html');
 let browserP = null;
 function browser() {
   if (!browserP) {
-    browserP = chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
-    browserP.then((b) => b.on('disconnected', () => { browserP = null; }));
+    browserP = (async () => {
+      // CHROMIUM_PATH lets Docker/local use a system Chrome; otherwise use the bundled build (works on locked-down hosts).
+      const executablePath = process.env.CHROMIUM_PATH || await sparticuz.executablePath();
+      const args = process.env.CHROMIUM_PATH ? ['--no-sandbox', '--disable-dev-shm-usage'] : [...sparticuz.args, '--no-sandbox'];
+      return chromium.launch({ executablePath, args, headless: true });
+    })();
+    browserP.then((b) => b.on('disconnected', () => { browserP = null; }), () => { browserP = null; });
   }
   return browserP;
 }
