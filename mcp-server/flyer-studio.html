@@ -203,6 +203,26 @@ dialog.aid .acts .btn{color:var(--ui-text)} dialog.aid .acts .btn.primary{color:
   .btn.primary .lbl{display:none}
 }
 
+
+/* Photoshop layout: toolbox far left, canvas centre, layers + options right */
+#layers{display:none}
+@media (min-width:761px){
+  html.ps #dock{display:contents}
+  html.ps #rail{order:-1;width:46px;background:#0f0f0e;padding:8px 0}
+  html.ps #rail .ico{width:34px;height:34px;border-radius:6px}
+  html.ps #panel{order:1;width:340px;flex:none;border-left:1px solid var(--ui-line);background:#1c1c1b}
+  html.ps #canvasWrap{background:#0b0b0a}
+  html.ps #layers{display:block;border-bottom:1px solid var(--ui-line);padding:0 0 6px}
+  html.ps #panel.ai-on #layers{display:none}
+  html.ps .top{background:#0f0f0e}
+}
+#layers .lh{padding:8px 12px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-dim);background:#141413;border-bottom:1px solid var(--ui-line)}
+#layers .lr{display:flex;align-items:center;gap:8px;width:100%;padding:6px 12px;border:0;background:transparent;color:var(--ui-text);font:inherit;font-size:13px;text-align:left;cursor:pointer;border-bottom:1px solid #262523}
+#layers .lr:hover{background:#242321} #layers .lr[aria-current=true]{background:#2f3b57}
+#layers .lr .ey{width:16px;height:16px;flex:none;accent-color:#6b8cff}
+#layers .lr .ty{width:18px;color:var(--ui-dim);text-align:center;font-weight:700;font-size:12px}
+#layers .lr.off{opacity:.5}
+#layers .ls{max-height:250px;overflow:auto}
 /* ---------- The flyer (fixed 2000 x 1125 canvas) ---------- */
 #stage{position:absolute;left:0;top:0;width:2000px;height:1125px;overflow:hidden;transform-origin:0 0;font-family:Montserrat,'Segoe UI',Arial,sans-serif;color:#1c1415;
   --maroon:#7d1226;--maroon2:#96243b;--gold:#c9a15a;--ink:#1c1415}
@@ -267,6 +287,7 @@ dialog.aid .acts .btn{color:var(--ui-text)} dialog.aid .acts .btn.primary{color:
     <span class="dim stat" id="status">Not saved yet</span>
     <button id="liveBtn" type="button" data-s="off" aria-label="Live link"><i></i><span>Go live</span></button>
     <span class="grow"></span>
+    <button class="btn" id="uiStyle" type="button" title="Switch between the Slides layout and the Photoshop layout" aria-pressed="false"><span>Layout: Slides</span></button>
     <button class="ico" id="undo" type="button" aria-label="Undo" title="Undo (Ctrl+Z)" disabled><i data-ic="undo"></i></button>
     <button class="ico" id="redo" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled><i data-ic="redo"></i></button>
     <button class="btn primary" id="dlBtn" type="button"><i data-ic="download"></i><span class="lbl">Download</span></button>
@@ -314,6 +335,7 @@ dialog.aid .acts .btn{color:var(--ui-text)} dialog.aid .acts .btn.primary{color:
     </div>
     <aside id="dock" aria-label="Properties and tools">
       <div id="panel">
+        <section id="layers" aria-label="Layers"></section>
         <section id="props" aria-live="polite"></section>
         <div class="dockhead">All options</div>
         <div id="sheetBody"></div>
@@ -652,6 +674,7 @@ function selectTarget(k){
   }
 }
 function buildBar(){
+  if(window.buildLayers)window.buildLayers();
   var bar=$('#props');bar.textContent='';barCtrls=[];
   var T=selKey&&targetBy(selKey);
   if(!T){var em=document.createElement('p');em.className='empty';em.textContent='Click anything on the flyer, or pick a tool in the strip on the left, to edit it here.';bar.appendChild(em);return;}
@@ -1222,6 +1245,46 @@ function scheduleDlg(){
   });
   setTimeout(function(){q('#schT').focus();},30);
 }
+
+/* ---------- Photoshop layout toggle + layers list ---------- */
+(function(){
+  var K='agiwm-ui',root=document.documentElement,btn=$('#uiStyle');
+  var GL={logo:'\u25a3',title:'T',sub:'T',loc:'T',script:'T',heading:'T',tags:'T',left:'\u25a7',right:'\u25a7',d1:'\u25a4',d2:'\u25a4',zoom:'\u25b6',yt:'\u25b6',btn:'\u25ad',bg:'\u25a8',colors:'\u25cf'};
+  window.buildLayers=function(){
+    var box=$('#layers');if(!box)return;box.textContent='';
+    var h=document.createElement('div');h.className='lh';h.textContent='Layers';box.appendChild(h);
+    var ls=document.createElement('div');ls.className='ls';box.appendChild(ls);
+    TARGETS.forEach(function(t){
+      var b=document.createElement('div');b.className='lr';b.setAttribute('role','button');b.tabIndex=0;
+      var shown=t.k==='bg'||t.k==='colors'||t.k==='logo'||t.k==='title'||t.k==='sub'||t.k==='loc'||t.k==='script'||t.k==='heading'||t.k==='tags';
+      var hasShow=getp(state,t.k+'.show')!==undefined||t.k==='logo';
+      var eye=null;
+      if(hasShow){eye=document.createElement('input');eye.type='checkbox';eye.className='ey';eye.setAttribute('aria-label','Show '+t.name);
+        eye.checked=t.k==='logo'?!!state.showLogo:!!getp(state,t.k+'.show');
+        eye.addEventListener('click',function(e){e.stopPropagation();});
+        eye.addEventListener('change',function(){setp(state,t.k==='logo'?'showLogo':t.k+'.show',eye.checked);changed();buildLayers();});
+        b.appendChild(eye);}
+      else{var sp=document.createElement('span');sp.className='ey';b.appendChild(sp);}
+      var ty=document.createElement('span');ty.className='ty';ty.textContent=GL[t.k]||'T';b.appendChild(ty);
+      var nm=document.createElement('span');nm.textContent=t.name;b.appendChild(nm);
+      if(eye&&!eye.checked)b.classList.add('off');
+      if(selKey===t.k)b.setAttribute('aria-current','true');
+      b.addEventListener('click',function(){selectTarget(t.k);});
+      b.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();selectTarget(t.k);}});
+      ls.appendChild(b);
+    });
+  };
+  function set(on,quiet){
+    root.classList.toggle('ps',on);btn.setAttribute('aria-pressed',String(on));
+    btn.firstChild.textContent='Layout: '+(on?'Photoshop':'Slides');
+    try{localStorage.setItem(K,on?'ps':'slides');}catch(e){}
+    if(typeof rescale==='function')setTimeout(rescale,30);
+    buildLayers();if(!quiet)toast(on?'Photoshop layout: toolbox left, layers and options right.':'Slides layout.');
+  }
+  btn.addEventListener('click',function(){set(!root.classList.contains('ps'));});
+  var on=false;try{on=localStorage.getItem(K)==='ps';}catch(e){}
+  set(on,true);
+})();
 
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',function(e){
