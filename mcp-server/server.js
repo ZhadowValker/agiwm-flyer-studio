@@ -1,4 +1,6 @@
 import express from 'express';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
@@ -45,11 +47,14 @@ function makeServer() {
 
 const app = express();
 app.use(express.json({ limit: '25mb' }));
-app.get('/', (_req, res) => res.type('text').send('AGIWM Flyer Studio MCP server. Connect Claude to /mcp' + (SECRET ? '/<secret>' : '')));
-app.get('/healthz', (_req, res) => res.send('ok'));
+const here = path.dirname(fileURLToPath(import.meta.url));
+const BUILD = 'studio-ui+chromium-fallback';   // shown at /healthz so you can tell which build is live
+// The studio itself (the flyer maker UI) is served at the site root.
+app.get(['/', '/index.html'], (_req, res) => res.sendFile(path.join(here, 'flyer-studio.html')));
+app.get('/healthz', (_req, res) => res.type('text').send('ok ' + BUILD));
 
-const path = SECRET ? `/mcp/${SECRET}` : '/mcp';
-app.post(path, async (req, res) => {
+const mcpPath = SECRET ? `/mcp/${SECRET}` : '/mcp';
+app.post(mcpPath, async (req, res) => {
   const server = makeServer();
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   res.on('close', () => { transport.close(); server.close(); });
@@ -57,6 +62,6 @@ app.post(path, async (req, res) => {
   catch (e) { if (!res.headersSent) res.status(500).json({ jsonrpc: '2.0', error: { code: -32603, message: 'Internal error' }, id: null }); }
 });
 const no = (_req, res) => res.status(405).json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed.' }, id: null });
-app.get(path, no); app.delete(path, no);
+app.get(mcpPath, no); app.delete(mcpPath, no);
 
-app.listen(PORT, () => console.log(`AGIWM flyer MCP listening on :${PORT}${path}`));
+app.listen(PORT, () => console.log(`AGIWM flyer MCP listening on :${PORT}${mcpPath}`));

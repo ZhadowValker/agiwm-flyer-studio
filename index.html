@@ -930,6 +930,10 @@ function saveBlob(blob,name){
   var c=window.claude&&window.claude.use?window.claude.use('downloads'):Promise.resolve(null);
   return Promise.resolve(c).then(function(dl){
     if(dl&&dl.save){return dl.save({filename:name,data:blob}).then(function(){toast('Saved '+name);},function(err){if(err&&err.code==='declined')return;throw err;});}
+    if(window.top===window){ /* normal website: plain browser download */
+      var u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();
+      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u);},4000);toast('Saved '+name);return;
+    }
     return showPreview(blob);
   });
 }
@@ -1003,7 +1007,9 @@ function saveTemplate(){
   var blob=new Blob([JSON.stringify(deck)],{type:'application/json'});
   var c=window.claude&&window.claude.use?window.claude.use('downloads'):Promise.resolve(null);
   Promise.resolve(c).then(function(dl){
-    if(!dl||!dl.save){toast('Saving files is not available in this view.');return;}
+    if(!dl||!dl.save){
+      if(window.top===window){var u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='agiwm-flyers-template.json';document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u);},4000);toast('Template saved');return;}
+      toast('Saving files is not available in this view.');return;}
     return dl.save({filename:'agiwm-flyers-template.json',data:blob}).then(function(){toast('Template saved');},function(e){if(!e||e.code!=='declined')toast('The template could not be saved.');});
   });
 }
