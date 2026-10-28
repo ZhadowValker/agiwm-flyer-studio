@@ -1360,6 +1360,11 @@ function send(text){
   text=String(text||'').trim();if(!text||busyAI||!ready())return;
   busyAI=true;inp.value='';inp.style.height='auto';
   chat.push({r:'me',t:text});add('me',text);
+  var SP=parseSchedule(text);
+  if(SP.items.length>=2){
+    var R=makeSchedule(text),msg=R.err?R.err:('I made '+R.n+' flyers for '+R.month.charAt(0).toUpperCase()+R.month.slice(1)+' '+R.year+', one per week, from the current flyer as the template. Each has that week\'s speaker in the left card; add the photos next.'+(R.skipped.length?' Skipped (no such week): '+R.skipped.join(', ')+'.':''));
+    add('bot',msg);chat.push({r:'bot',t:msg});saveChat();busyAI=false;return;
+  }
   var wait=add('bot','Thinking...');
   var hist=chat.slice(-9,-1).map(function(m){return {role:m.r==='me'?'user':'assistant',content:m.t};});
   var msgs=[{role:'system',content:systemPrompt()}].concat(hist,[{role:'user',content:text+'\n\nCurrent flyer:\n'+JSON.stringify(cleanFlyer())}]);
