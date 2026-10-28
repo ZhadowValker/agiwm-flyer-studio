@@ -68,8 +68,12 @@ ID: 996 959 8014 | Passcode: 202022
 Come and be Blessed! 🙌
 ```
 
-- **Studio:** the "Invite text" button in the top bar (or File menu > Invite text for WhatsApp) opens the message. Edit it, copy it, or send it on WhatsApp. Paste Zoom's own invite link in the box if you have one (it is remembered in this browser); otherwise a plain link is made from the meeting ID.
-- **Connector:** `invite_text` returns the message for the live flyer, or for week N of the last `plan_schedule`. `make_schedule` also returns each week's text next to its image.
-- **API (for the bot):** `GET /api/invite?k=...` for the live flyer, `GET /api/schedule/2.txt?k=...` for week 2. Optional `zoom=` and `closing=`.
-- Names typed in capitals on the flyer are written in normal capitals in the message. Hidden speakers, dates, Zoom or YouTube are left out.
+- **Studio:** the "Invite text" button in the top bar (or File menu > Invite text for WhatsApp) opens the message. Edit it, then:
+  - **Share picture + text** (phones and tablets): pick WhatsApp and the flyer arrives with the text under it. If WhatsApp shows only the picture, use Copy text and paste it as the caption.
+  - **Save picture + copy text** (computers): saves the flyer as a 1280x720 JPG and copies the text in one click; in WhatsApp attach the picture and paste the text as its caption. **Copy picture** puts the picture on the clipboard for Ctrl+V into WhatsApp Web.
+  - **WhatsApp (text only)**: on a phone this opens WhatsApp; on a computer it opens WhatsApp Web. The wa.me link is not used on a computer, because it opens the WhatsApp desktop app, which can turn emoji into ? marks and cut the text at an "&".
+  - Paste Zoom's own invite link in the box if you have one (it is remembered in this browser); otherwise a plain link is made from the meeting ID.
+- **Connector:** `invite_text` returns the message for the live flyer, or for week N of the last `plan_schedule`. `make_flyer`, `render_current_flyer` and `update_flyer` (with preview) return the picture and the text together (`with_invite: false` for the picture only). `make_schedule` returns each week's text next to its image.
+- **API (for the bot):** `GET /api/invite?k=...` for the live flyer, `GET /api/schedule/2.txt?k=...` for week 2, and the matching `.png` / `.jpg` for the picture. Optional `zoom=` and `closing=`. A bot sends the picture with the text as its caption in one message.
+- Names and headings typed all in capitals or all in small letters on the flyer are written in normal capitals in the message. Hidden speakers, dates, Zoom or YouTube are left out.
 - The code is in `invite.js`; the studio build inlines the same file.

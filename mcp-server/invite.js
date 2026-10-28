@@ -21,13 +21,15 @@ function invSec(s, k) {
   return o;
 }
 function invStr(v, dflt) { return (v === undefined || v === null ? dflt : String(v)).replace(/\u2019/g, "'").replace(/\s+/g, ' ').trim(); }
-// Names typed in capitals for the flyer read as shouting in a chat, so "DR MANJULA CHARAN" becomes "Dr Manjula Charan".
-function invName(n) {
+// Text typed all in capitals (or all in small letters) on the flyer reads badly in a chat, so
+// "DR MANJULA CHARAN" and "prayer meeting" become "Dr Manjula Charan" and "Prayer Meeting".
+function invCase(n) {
   n = invStr(n, '');
-  if (n && n === n.toUpperCase() && n !== n.toLowerCase())
+  if (n && n.toUpperCase() !== n.toLowerCase() && (n === n.toUpperCase() || n === n.toLowerCase()))
     n = n.toLowerCase().replace(/(^|[\s\-(])([a-z\u00c0-\u024f])/g, function (m, a, b) { return a + b.toUpperCase(); });
   return n;
 }
+var invName = invCase;
 function invDate(iso) {
   var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
   return m && +m[2] >= 1 && +m[2] <= 12 ? (+m[3]) + ' ' + INV_MON[+m[2] - 1] : '';
@@ -44,7 +46,7 @@ function invGroup(d) {
 function buildInvite(s, opt) {
   opt = opt || {};
   var blocks = [], g;
-  var title = [invStr(s && s.title, INVITE_DEFAULTS.title), invStr(s && s.script, INVITE_DEFAULTS.script), invStr(s && s.heading, INVITE_DEFAULTS.heading)].filter(Boolean).join(' ');
+  var title = [invStr(s && s.title, INVITE_DEFAULTS.title), invCase(s && s.script != null ? s.script : INVITE_DEFAULTS.script), invCase(s && s.heading != null ? s.heading : INVITE_DEFAULTS.heading)].filter(Boolean).join(' ');
   blocks.push('\u{1F64F} ' + title);
 
   var sp = [];

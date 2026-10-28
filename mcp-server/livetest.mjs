@@ -50,6 +50,9 @@ try{
   chk('invite week 3 has speaker, date and zoom link',/Word: Ruth J Amma/.test(ivt)&&/21 Nov/.test(ivt)&&/20 Nov/.test(ivt)&&ivt.includes('pwd=XYZ'));
   const ivl=await c.callTool({name:'invite_text',arguments:{}}); chk('invite from live flyer follows hand edit',/Word: Dr Nirmala/.test(ivl.content[0].text)&&/ID: 999 888 7777/.test(ivl.content[0].text));
   const ms2=await c.callTool({name:'make_schedule',arguments:{text:SCH,size:'1280x720',format:'jpg'}}); chk('make_schedule includes invitation text',ms2.content.filter(x=>x.type==='text'&&/WhatsApp invitation text/.test(x.text)).length===4);
+  const rcw=await c.callTool({name:'render_current_flyer',arguments:{size:'1280x720'}}); chk('render_current_flyer returns picture + invitation text',rcw.content.some(x=>x.type==='image')&&rcw.content.some(x=>x.type==='text'&&/WhatsApp invitation text/.test(x.text)&&/Zoom:/.test(x.text)));
+  const rcn=await c.callTool({name:'render_current_flyer',arguments:{size:'1280x720',with_invite:false}}); chk('with_invite false drops the text',!rcn.content.some(x=>x.type==='text'&&/WhatsApp invitation text/.test(x.text)));
+  const mf=await c.callTool({name:'make_flyer',arguments:{left_speaker:{name:'Evangelist Preethi Reddy'},right_speaker:{name:'sis dolly priyadarshini & bro jonah'},size:'1280x720',format:'jpg'}}); const mft=mf.content.filter(x=>x.type==='text').map(x=>x.text).join('\n'); console.log(mft.slice(0,400)); chk('make_flyer returns picture + text with tidy names',mf.content.some(x=>x.type==='image')&&/Word: Evangelist Preethi Reddy/.test(mft)&&/Worship: Sis Dolly Priyadarshini & Bro Jonah/.test(mft));
   const ai=await fetch(B+'/api/invite?k=s3cret'); chk('api invite is text',ai.ok&&(await ai.text()).startsWith('\u{1F64F}'));
   const at=await fetch(B+'/api/schedule/2.txt?k=s3cret'); const att=await at.text(); chk('api week 2 txt',at.ok&&/Dr Nirmala Sathyanandam Garu/.test(att));
   console.log('page errors',errs); await br.close();

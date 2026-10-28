@@ -166,6 +166,9 @@ dialog.aid label{display:block;margin:0 0 10px}
 dialog.aid label>span{display:block;font-size:12px;color:var(--ui-dim);margin-bottom:4px}
 dialog.aid input,dialog.aid select{width:100%;box-sizing:border-box;background:var(--ui-bg);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:8px;padding:8px 10px;font:inherit}
 dialog.aid textarea{width:100%;box-sizing:border-box;background:var(--ui-bg);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:8px;padding:9px 10px;font:inherit;line-height:1.45;resize:vertical}
+dialog.aid .invpic{border:1px solid var(--ui-line);border-radius:10px;padding:10px 12px;margin:0 0 6px}
+dialog.aid .invpic .invh{font-size:12.5px;color:var(--ui-dim);margin:0 0 8px}
+dialog.aid .btn[hidden]{display:none}
 dialog.aid .st{min-height:20px;font-size:12.5px;color:var(--ui-dim);margin:2px 0 10px}
 dialog.aid .st[data-k=ok]{color:#6bd98a} dialog.aid .st[data-k=bad]{color:#ff8b8e}
 dialog.aid .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
@@ -1407,13 +1410,15 @@ function invSec(s, k) {
   return o;
 }
 function invStr(v, dflt) { return (v === undefined || v === null ? dflt : String(v)).replace(/\u2019/g, "'").replace(/\s+/g, ' ').trim(); }
-// Names typed in capitals for the flyer read as shouting in a chat, so "DR MANJULA CHARAN" becomes "Dr Manjula Charan".
-function invName(n) {
+// Text typed all in capitals (or all in small letters) on the flyer reads badly in a chat, so
+// "DR MANJULA CHARAN" and "prayer meeting" become "Dr Manjula Charan" and "Prayer Meeting".
+function invCase(n) {
   n = invStr(n, '');
-  if (n && n === n.toUpperCase() && n !== n.toLowerCase())
+  if (n && n.toUpperCase() !== n.toLowerCase() && (n === n.toUpperCase() || n === n.toLowerCase()))
     n = n.toLowerCase().replace(/(^|[\s\-(])([a-z\u00c0-\u024f])/g, function (m, a, b) { return a + b.toUpperCase(); });
   return n;
 }
+var invName = invCase;
 function invDate(iso) {
   var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
   return m && +m[2] >= 1 && +m[2] <= 12 ? (+m[3]) + ' ' + INV_MON[+m[2] - 1] : '';
@@ -1430,7 +1435,7 @@ function invGroup(d) {
 function buildInvite(s, opt) {
   opt = opt || {};
   var blocks = [], g;
-  var title = [invStr(s && s.title, INVITE_DEFAULTS.title), invStr(s && s.script, INVITE_DEFAULTS.script), invStr(s && s.heading, INVITE_DEFAULTS.heading)].filter(Boolean).join(' ');
+  var title = [invStr(s && s.title, INVITE_DEFAULTS.title), invCase(s && s.script != null ? s.script : INVITE_DEFAULTS.script), invCase(s && s.heading != null ? s.heading : INVITE_DEFAULTS.heading)].filter(Boolean).join(' ');
   blocks.push('\u{1F64F} ' + title);
 
   var sp = [];
@@ -1482,24 +1487,64 @@ function copyText(t,host){
   if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t).catch(function(){return legacyCopy(t,host);});
   return legacyCopy(t,host);
 }
+function isPhone(){return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'')||((navigator.maxTouchPoints||0)>1&&/Mac/i.test(navigator.platform||''));}
 function inviteDlg(){
-  var dlg=document.createElement('dialog');dlg.className='aid';dlg.style.width='min(560px,94vw)';
+  var dlg=document.createElement('dialog');dlg.className='aid';dlg.style.width='min(580px,94vw)';
   dlg.innerHTML='<form method="dialog" id="invF"><h2>Invite text for WhatsApp</h2>'
-   +'<p class="nt">Made from this flyer, so the words and the picture always match. Change anything you like, then copy it or send it on WhatsApp.</p>'
+   +'<p class="nt">Made from this flyer, so the words and the picture always match. Change anything you like.</p>'
    +'<label><span>Zoom link (optional). Paste the invite link from Zoom if you have one; otherwise a plain link is made from the meeting ID.</span><input id="invZ" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://zoom.us/j/..."></label>'
-   +'<label><span>Message</span><textarea id="invT" rows="14"></textarea></label>'
-   +'<p class="st" id="invS" role="status"></p><div class="acts"><button type="button" class="btn" id="invC">Close</button><button type="button" class="btn" id="invR">Rebuild</button><button type="button" class="btn" id="invK">Copy</button><button type="button" class="btn primary" id="invW">Send on WhatsApp</button></div></form>';
+   +'<label><span>Message</span><textarea id="invT" rows="13"></textarea></label>'
+   +'<div class="acts" style="justify-content:flex-start;margin-bottom:12px"><button type="button" class="btn" id="invK">Copy text</button><button type="button" class="btn" id="invR">Rebuild</button><button type="button" class="btn" id="invW">WhatsApp (text only)</button></div>'
+   +'<div class="invpic"><div class="invh">Send the picture together with this text</div>'
+   +'<div class="acts" style="justify-content:flex-start"><button type="button" class="btn primary" id="invS1" hidden>Share picture + text</button><button type="button" class="btn primary" id="invS2">Save picture + copy text</button><button type="button" class="btn" id="invS3" hidden>Copy picture</button></div>'
+   +'<p class="nt" id="invH" style="margin:8px 0 0"></p></div>'
+   +'<p class="st" id="invS" role="status"></p><div class="acts"><button type="button" class="btn" id="invC">Close</button></div></form>';
   document.body.appendChild(dlg);dlg.showModal();
-  var q=function(i){return dlg.querySelector(i);},KEY='agiwm-zoomlink';
+  var q=function(i){return dlg.querySelector(i);},KEY='agiwm-zoomlink',phone=isPhone(),pic=null,picBusy=false;
   try{q('#invZ').value=localStorage.getItem(KEY)||'';}catch(e){}
   function say(m,k){var s=q('#invS');s.textContent=m;s.setAttribute('data-k',k||'');}
+  function txt(){return q('#invT').value.trim();}
   function build(){q('#invT').value=buildInvite(state,{zoomLink:q('#invZ').value});}
   function close(){dlg.close();dlg.remove();}
-  build();
+  function canShare(){try{return !!(pic&&navigator.share&&navigator.canShare&&navigator.canShare({files:[pic]}));}catch(e){return false;}}
+  var canClip=!!(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write);
+  function sync(){
+    var ready=!!pic,sh=canShare();
+    q('#invS1').hidden=!(sh&&phone);q('#invS3').hidden=!(canClip&&!phone);
+    ['#invS1','#invS2','#invS3'].forEach(function(i){q(i).disabled=!ready;});
+    q('#invW').textContent=phone?'WhatsApp (text only)':'WhatsApp Web (text only)';
+    q('#invH').textContent=picBusy?'Preparing the picture...':!ready?'The picture could not be prepared. You can still copy the text.':
+      phone?'Tap Share picture + text and choose WhatsApp. If WhatsApp shows only the picture, tap Copy text first and paste it under the picture.':
+      'Save picture + copy text, then in WhatsApp attach the saved picture and paste the text as its caption. Or tap Copy picture, press Ctrl+V in the chat, then Copy text and paste it as the caption.';
+  }
+  function prep(){
+    picBusy=true;pic=null;sync();endEdit(true);
+    draw(0.64).then(function(cv){return new Promise(function(res,rej){cv.toBlob(function(b){b?res(b):rej(new Error('picture'));},'image/jpeg',0.93);});})
+      .then(function(b){pic=new File([b],baseName()+'.jpg',{type:'image/jpeg'});},function(){pic=null;})
+      .then(function(){picBusy=false;if(dlg.isConnected)sync();});
+  }
+  function saveFile(f){var u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;dlg.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u);},4000);}
+  build();sync();prep();
   q('#invZ').addEventListener('input',function(){try{localStorage.setItem(KEY,q('#invZ').value.trim());}catch(e){}build();say('','');});
   q('#invR').addEventListener('click',function(){build();say('Rebuilt from the flyer.','ok');});
-  q('#invK').addEventListener('click',function(){copyText(q('#invT').value,dlg).then(function(){say('Copied. Paste it into WhatsApp.','ok');},function(){say('Could not copy here. Select the text and copy it by hand.','bad');});});
-  q('#invW').addEventListener('click',function(){var t=q('#invT').value.trim();if(!t)return;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank','noopener');});
+  q('#invK').addEventListener('click',function(){copyText(txt(),dlg).then(function(){say('Text copied. Paste it into WhatsApp.','ok');},function(){say('Could not copy here. Select the text and copy it by hand.','bad');});});
+  /* The wa.me link opens the WhatsApp desktop app on a PC, which can turn emoji into ? marks and cut the text at an &, so on a computer use WhatsApp Web. */
+  q('#invW').addEventListener('click',function(){var t=txt();if(!t)return;window.open((phone?'https://wa.me/?text=':'https://web.whatsapp.com/send?text=')+encodeURIComponent(t),'_blank','noopener');});
+  q('#invS1').addEventListener('click',function(){
+    if(!canShare())return;
+    navigator.share({files:[pic],text:txt(),title:'AGIWM prayer meeting'}).then(function(){say('Shared.','ok');},function(e){if(e&&e.name!=='AbortError')say('Sharing did not work here. Use Save picture + copy text instead.','bad');});
+  });
+  q('#invS2').addEventListener('click',function(){
+    if(!pic)return;saveFile(pic);
+    copyText(txt(),dlg).then(function(){say('Picture saved and text copied. In WhatsApp, attach the picture and paste the text as its caption.','ok');},function(){say('Picture saved. Copy the text with the Copy text button.','bad');});
+  });
+  q('#invS3').addEventListener('click',function(){
+    if(!pic)return;
+    createImageBitmap(pic).then(function(bm){var c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);
+      return new Promise(function(res,rej){c.toBlob(function(b){b?res(b):rej(new Error('png'));},'image/png');});})
+    .then(function(png){return navigator.clipboard.write([new ClipboardItem({'image/png':png})]);})
+    .then(function(){say('Picture copied. Press Ctrl+V in the WhatsApp chat, then use Copy text and paste it as the caption.','ok');},function(){say('Could not copy the picture here. Use Save picture + copy text.','bad');});
+  });
   q('#invC').addEventListener('click',close);
   q('#invF').addEventListener('submit',function(e){e.preventDefault();});
   dlg.addEventListener('cancel',function(e){e.preventDefault();close();});

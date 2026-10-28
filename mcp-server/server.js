@@ -21,6 +21,8 @@ const text = (t) => ({ content: [{ type: 'text', text: t }] });
 const fail = (e) => ({ isError: true, content: [{ type: 'text', text: e.message || String(e) }] });
 const sizeScale = (size) => (size === '2000x1125' || !size ? 1 : size === '1920x1080' ? 0.96 : 0.64);
 const img = (buf, format, extra) => ({ content: [{ type: 'image', data: buf.toString('base64'), mimeType: format === 'jpg' ? 'image/jpeg' : 'image/png' }, { type: 'text', text: extra }] });
+const inviteOpts = { with_invite: z.boolean().optional().describe('also return the WhatsApp invitation text with the picture (default true), so both can be sent together'), zoom_link: z.string().url().max(300).optional().describe("Zoom's own invite link for that text") };
+const withInvite = (fl, extra, o) => (o.with_invite === false ? extra : extra + '\n\nWhatsApp invitation text (send it together with the picture):\n\n' + buildInvite(fl, { zoomLink: o.zoom_link }));
 const outOpts = { format: z.enum(['png', 'jpg']).optional(), size: z.enum(['2000x1125', '1920x1080', '1280x720']).optional() };
 
 function makeServer() {
@@ -29,26 +31,26 @@ function makeServer() {
   s.registerTool('make_flyer', {
     title: 'Make AGIWM flyer',
     description: 'Render a one-off AGIWM Women’s Prayer Meeting flyer (2000x1125) from the fixed template. Every field is optional; anything left out keeps the AGIWM default. This does NOT touch the live flyer shown in the studio; use update_flyer for that.',
-    inputSchema: { ...flyerShape, ...outOpts },
+    inputSchema: { ...flyerShape, ...outOpts, ...inviteOpts },
   }, async (args) => {
     try {
-      const { format = 'png', size = '2000x1125', ...rest } = args;
-      const buf = await renderFlyer(await buildFlyer(rest), { format, scale: sizeScale(size) });
-      return img(buf, format, `Flyer rendered (${size} ${format.toUpperCase()}, ${(buf.length / 1024).toFixed(0)} KB).`);
+      const { format = 'png', size = '2000x1125', with_invite, zoom_link, ...rest } = args;
+      const fl = await buildFlyer(rest), buf = await renderFlyer(fl, { format, scale: sizeScale(size) });
+      return img(buf, format, withInvite(fl, `Flyer rendered (${size} ${format.toUpperCase()}, ${(buf.length / 1024).toFixed(0)} KB).`, { with_invite, zoom_link }));
     } catch (e) { return fail(new Error('Could not make the flyer: ' + e.message)); }
   });
 
   s.registerTool('update_flyer', {
     title: 'Update the live flyer',
     description: 'Change the live flyer that is open in the studio at the website. Only the fields you pass change; earlier changes stay, so you can build the flyer up over several messages. Anyone with the studio open sees it update immediately, and the instruction appears in its Live feed. Use "person" on a speaker to pull a photo from the photo library. Set preview=true to also get the rendered image back.',
-    inputSchema: { ...flyerShape, by: z.string().max(30).optional().describe('who is asking, shown in the feed (default Claude)'), preview: z.boolean().optional(), ...outOpts },
+    inputSchema: { ...flyerShape, by: z.string().max(30).optional().describe('who is asking, shown in the feed (default Claude)'), preview: z.boolean().optional(), ...outOpts, ...inviteOpts },
   }, async (args) => {
     try {
-      const { by = 'Claude', preview = false, format = 'png', size = '1280x720', ...rest } = args;
+      const { by = 'Claude', preview = false, format = 'png', size = '1280x720', with_invite, zoom_link, ...rest } = args;
       const v = live.patch(await buildFlyer(rest), { by, text: describe(rest) });
       if (!preview) return text(`Live flyer updated (version ${v}). It is now showing in the studio: ${describe(rest)}.`);
       const buf = await renderFlyer(live.get().flyer, { format, scale: sizeScale(size) });
-      return img(buf, format, `Live flyer updated (version ${v}).`);
+      return img(buf, format, withInvite(live.get().flyer, `Live flyer updated (version ${v}).`, { with_invite, zoom_link }));
     } catch (e) { return fail(new Error('Could not update the flyer: ' + e.message)); }
   });
 
@@ -66,9 +68,9 @@ function makeServer() {
   s.registerTool('reset_flyer', { title: 'Reset the live flyer', description: 'Put the live flyer back to the original AGIWM defaults.', inputSchema: {} }, async () => text(`Live flyer reset (version ${live.reset('Claude')}).`));
 
   s.registerTool('render_current_flyer', {
-    title: 'Render the live flyer', description: 'Render the live flyer exactly as it stands now (including hand edits in the studio) and return the image.', inputSchema: outOpts,
-  }, async ({ format = 'png', size = '2000x1125' }) => {
-    try { const buf = await renderFlyer(live.get().flyer, { format, scale: sizeScale(size) }); return img(buf, format, `Live flyer (version ${live.get().version}).`); }
+    title: 'Render the live flyer', description: 'Render the live flyer exactly as it stands now (including hand edits in the studio) and return the image together with its WhatsApp invitation text, ready to send as one post.', inputSchema: { ...outOpts, ...inviteOpts },
+  }, async ({ format = 'png', size = '2000x1125', with_invite, zoom_link }) => {
+    try { const buf = await renderFlyer(live.get().flyer, { format, scale: sizeScale(size) }); return img(buf, format, withInvite(live.get().flyer, `Live flyer (version ${live.get().version}).`, { with_invite, zoom_link })); }
     catch (e) { return fail(e); }
   });
 
