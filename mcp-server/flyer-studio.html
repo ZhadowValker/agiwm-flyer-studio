@@ -135,6 +135,41 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 #selbox{position:absolute;pointer-events:none;border:3px solid #3d82f6;border-radius:6px;z-index:50;display:none}
 .phw .ph{will-change:transform}
 
+/* ---------- AI assistant ---------- */
+#panel.ai-on>#props,#panel.ai-on>.dockhead,#panel.ai-on>#sheetBody{display:none}
+#aiPane{display:none;flex-direction:column;height:100%;min-height:0}
+#panel.ai-on{display:flex;flex-direction:column;padding-bottom:0;overflow:hidden}
+#panel.ai-on #aiPane{display:flex;flex:1;min-height:0}
+#aiPane .ahd{display:flex;align-items:center;gap:4px;padding:8px 10px;border-bottom:1px solid var(--ui-line)}
+#aiPane .ahd .fname{flex:1;font-weight:600;padding-left:6px}
+#aiLog{flex:1;min-height:0;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+#aiLog .m{max-width:94%;padding:8px 11px;border-radius:12px;white-space:pre-wrap;word-break:break-word;line-height:1.45}
+#aiLog .m.me{align-self:flex-end;background:#3d82f633;border:1px solid #3d82f655}
+#aiLog .m.bot{align-self:flex-start;background:var(--ui-raise);border:1px solid var(--ui-line)}
+#aiLog .m.bad{border-color:var(--ui-danger);color:#ffb4b6}
+#aiLog .m.note{align-self:center;color:var(--ui-dim);font-size:12.5px;background:none;border:0;text-align:center}
+#aiLog .chg{margin-top:6px;font-size:12.5px;color:var(--ui-dim)}
+#aiLog .chg button{margin-left:8px;border:1px solid var(--ui-line);background:var(--ui-bg);color:var(--ui-text);border-radius:7px;padding:2px 9px;cursor:pointer}
+#aiChips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 8px}
+#aiChips button{border:1px solid var(--ui-line);background:var(--ui-raise);color:var(--ui-text);border-radius:99px;padding:4px 11px;cursor:pointer;font-size:12.5px}
+#aiChips button:hover{border-color:var(--ui-accent)}
+#aiForm{display:flex;gap:8px;padding:10px 14px 14px;border-top:1px solid var(--ui-line);align-items:flex-end}
+#aiIn{flex:1;resize:none;min-height:40px;max-height:140px;background:var(--ui-bg);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:10px;padding:9px 11px;font:inherit}
+#aiIn:focus{outline:none;border-color:var(--ui-accent)}
+#aiSetup{padding:18px 16px;color:var(--ui-dim)}
+#aiSetup .btn{margin-top:10px;color:var(--ui-text)}
+dialog.aid{background:var(--ui-raise);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:14px;padding:18px 20px;width:min(440px,92vw);box-shadow:0 20px 60px #000b}
+dialog.aid::backdrop{background:#000a}
+dialog.aid h2{margin:0 0 6px;font-size:18px}
+dialog.aid .nt{color:var(--ui-dim);font-size:12.5px;margin:0 0 12px}
+dialog.aid label{display:block;margin:0 0 10px}
+dialog.aid label>span{display:block;font-size:12px;color:var(--ui-dim);margin-bottom:4px}
+dialog.aid input,dialog.aid select{width:100%;box-sizing:border-box;background:var(--ui-bg);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:8px;padding:8px 10px;font:inherit}
+dialog.aid .st{min-height:20px;font-size:12.5px;color:var(--ui-dim);margin:2px 0 10px}
+dialog.aid .st[data-k=ok]{color:#6bd98a} dialog.aid .st[data-k=bad]{color:#ff8b8e}
+dialog.aid .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+dialog.aid .acts .btn{color:var(--ui-text)} dialog.aid .acts .btn.primary{color:#17161a}
+
 @media (max-width:760px){
   .title-in{width:150px}
   .dim.stat{display:none}
@@ -265,6 +300,8 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
         <div id="sheetBody"></div>
       </div>
       <nav id="rail" aria-label="Tools">
+        <button class="ico" id="aiBtn" type="button" aria-label="AI assistant" title="AI assistant" aria-pressed="false"><i data-ic="spark"></i></button>
+        <span class="rsp"></span>
         <button class="ico" type="button" data-sel="title" aria-label="Text" title="Text"><i data-ic="text"></i></button>
         <button class="ico" type="button" data-sel="left" aria-label="Photos" title="Photos"><i data-ic="image"></i></button>
         <button class="ico" type="button" data-sel="bg" aria-label="Background" title="Background"><i data-ic="bg"></i></button>
@@ -353,6 +390,7 @@ var IC={
  right:'<path d="M9 6l6 6-6 6"/>',
  x:'<path d="M6 6l12 12M18 6L6 18"/>',
  drop:'<path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/>',
+ spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 3v4M17 5h4"/>',
  sliders:'<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'
 };
 function icon(n){return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">'+IC[n]+'</svg>';}
@@ -1048,6 +1086,171 @@ document.addEventListener('keydown',function(e){
     e.preventDefault();if(e.key.toLowerCase()==='y'||e.shiftKey)redo();else undo();
   }
 });
+
+/* ---------- AI assistant (bring your own key; OpenRouter or any OpenAI-style address) ---------- */
+(function(){
+var AIK='agiwm-flyer-ai',CHK='agiwm-flyer-chat';
+var AI_DEF={url:'https://openrouter.ai/api/v1',key:'',model:'openai/gpt-4o-mini',backup:''};
+var PROVIDERS=[['OpenRouter','https://openrouter.ai/api/v1','openai/gpt-4o-mini'],['OpenAI','https://api.openai.com/v1','gpt-4o-mini'],['Groq','https://api.groq.com/openai/v1','llama-3.3-70b-versatile'],['NVIDIA','https://integrate.api.nvidia.com/v1','openai/gpt-oss-20b'],['Ollama (this computer)','http://localhost:11434/v1','llama3.1']];
+function getAI(){try{return Object.assign({},AI_DEF,JSON.parse(localStorage.getItem(AIK)||'{}'));}catch(e){return Object.assign({},AI_DEF);}}
+function saveAI(o){var c={};Object.keys(AI_DEF).forEach(function(k){c[k]=String(o[k]==null?AI_DEF[k]:o[k]).trim();});c.url=c.url.replace(/\/+$/,'');try{localStorage.setItem(AIK,JSON.stringify(c));}catch(e){}return c;}
+function ready(){var s=getAI();return !!(s.url&&s.key&&s.model);}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function AIErr(m,k){var e=new Error(m);e.kind=k;return e;}
+
+function clean(t){return String(t||'').replace(/<think>[\s\S]*?<\/think>/gi,'').trim();}
+function extract(t){t=clean(t);var a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<=a)throw AIErr('The reply was not in the expected format.','format');
+  try{return JSON.parse(t.slice(a,b+1));}catch(e){throw AIErr('The reply was not in the expected format.','format');}}
+function chatOnce(messages,model,maxTokens){
+  var s=getAI(),ctl=new AbortController(),timer=setTimeout(function(){ctl.abort();},60000);
+  return fetch(s.url+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+s.key},
+    body:JSON.stringify({model:model,messages:messages,temperature:0.2,max_tokens:maxTokens||1500,stream:false}),signal:ctl.signal})
+  .catch(function(e){throw AIErr(e&&e.name==='AbortError'?'The request took too long.':'The browser could not reach the AI address. Check your connection, or whether this service allows calls from a web page (OpenRouter does).','network');})
+  .then(function(res){clearTimeout(timer);
+    if(res.status===401||res.status===403)throw AIErr('The key was not accepted. Check it in AI settings.','auth');
+    if(res.status===404)throw AIErr('The model "'+model+'" was not found. Check the name in AI settings.','model');
+    if(res.status===402)throw AIErr('The AI account has no credit left.','auth');
+    if(res.status===429)throw AIErr('Too many requests right now. Try again in a minute.','rate');
+    if(!res.ok)throw AIErr('The AI service returned an error ('+res.status+').','server');
+    return res.json().catch(function(){throw AIErr('The AI service sent an unreadable reply.','format');});})
+  .then(function(d){var m=d&&d.choices&&d.choices[0]&&d.choices[0].message,t=clean(m&&m.content);if(!t)throw AIErr('The model sent an empty reply. Try again, or pick another model.','format');return t;});
+}
+function ask(messages){
+  var s=getAI(),models=[s.model];if(s.backup&&s.backup!==s.model)models.push(s.backup);
+  var i=0;function next(err){if(i>=models.length)throw err;var m=models[i++];
+    return chatOnce(messages,m,1500).then(extract).catch(function(e){if(e.kind==='auth'||e.kind==='network')throw e;return next(e);});}
+  return next(null);
+}
+
+/* ---- what the assistant may change ---- */
+function leafPaths(o,pre,out){Object.keys(o).forEach(function(k){
+  if(/^(logo|photo|img)$/.test(k)||(!pre&&k==='id'))return;var v=o[k],p=pre?pre+'.'+k:k;
+  if(Array.isArray(v)){v.forEach(function(_,i){out[p+'.'+i]='string';});}
+  else if(v&&typeof v==='object')leafPaths(v,p,out);else out[p]=typeof v;});return out;}
+var PATHS=leafPaths(DEF,'',{});
+var HEXKEY=/(^|\.)(base|maroon|gold|ink|g1|g2|accent2)$/;
+function cleanFlyer(){var f=cp(state);delete f.id;delete f.logo;f.left.photo=state.left.photo?'(photo set)':'';f.right.photo=state.right.photo?'(photo set)':'';f.bg.img=state.bg.img?'(image set)':'';return f;}
+function systemPrompt(){
+  var t=new Date(),iso=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+  return 'You edit one weekly prayer-meeting flyer for AGIWM (Amazing God International Women\'s Ministries). Today is '+iso+' ('+['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][t.getDay()]+').\n'
+  +'Reply with ONE JSON object only, no other text: {"reply":"short friendly sentence on what you did or a question","set":{"path":value},"presets":{"bg":"name","accent":"name"}}. "set" and "presets" are optional; leave them out when nothing changes.\n'
+  +'"set" uses dotted paths into the flyer JSON you are given. You may set only these paths: '+Object.keys(PATHS).join(', ')+'.\n'
+  +'Rules: text fields are plain text, under 100 characters. Dates are YYYY-MM-DD (the weekday and 24th/7th style are automatic). d1 is the left date card (India, flag "in", time in IST); d2 is the right card (USA, flag "us", time in EDT/EST). When the user gives one meeting time, convert it for the other card (IST is 9.5 hours ahead of EDT and 10.5 hours ahead of EST); the US evening is usually the day before in India. Flags: none, in, us, uk, ca. Booleans: show flags (true/false). Colours: #RRGGBB. bg.lighten and bg.glow are numbers 0 to 1; bg.ang 0 to 360; left.z and right.z (photo zoom) 1 to 4. fonts.* is "" (original) or one of: '+FONTLIST.map(function(f){return f.n;}).join(', ')+'.\n'
+  +'Backgrounds: set presets.bg to one of '+BGP.map(function(p){return p[0];}).join(', ')+'. Accent colours: presets.accent one of '+ACP.map(function(p){return p[0];}).join(', ')+'. For other colours set bg.grad=true with bg.g1 and bg.g2, or bg.grad=false with bg.base; accent colour is col.maroon (and col.accent2 for the gradient end).\n'
+  +'You cannot add photos; if asked, tell the user to use the Photos tool. Change only what the user asked for. Keep names in the style they use (speaker names are usually UPPERCASE).';
+}
+function coerce(path,v){
+  var ty=PATHS[path];if(!ty)return undefined;
+  if(ty==='boolean'){if(v===true||v===false)return v;if(v==='true')return true;if(v==='false')return false;return undefined;}
+  if(ty==='number'){v=Number(v);if(!isFinite(v))return undefined;if(/\.z$/.test(path))return Math.min(4,Math.max(1,v));if(/(lighten|glow)$/.test(path))return Math.min(1,Math.max(0,v));if(/ang$/.test(path))return Math.min(360,Math.max(0,v));return v;}
+  if(typeof v!=='string')v=(v==null?'':String(v));
+  v=v.trim().slice(0,120);
+  if(/(^|\.)flag$/.test(path))return FLAGS[v]?v:undefined;
+  if(HEXKEY.test(path))return /^#[0-9a-fA-F]{6}$/.test(v)?v:undefined;
+  if(/(^|\.)date$/.test(path))return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:undefined;
+  if(/^fonts\./.test(path))return (v===''||FONTMAP[v])?v:undefined;
+  return v;
+}
+function applyEdits(out){
+  var n=0,set=out&&typeof out.set==='object'&&out.set?out.set:{};
+  flush();
+  Object.keys(set).forEach(function(p){var v=coerce(p,set[p]);if(v===undefined)return;
+    var parts=p.split('.'),last=parts.pop(),o=state;
+    for(var i=0;i<parts.length;i++){o=o[parts[i]];if(o==null)return;}
+    if(o[last]!==v){o[last]=v;n++;if(/^fonts\./.test(p))needFont(v);}});
+  var pr=out&&out.presets;
+  if(pr&&typeof pr==='object'){
+    if(pr.bg){var b=BGP.filter(function(p){return p[0].toLowerCase()===String(pr.bg).toLowerCase();})[0];if(b){bgPreset(b)(state);n++;}}
+    if(pr.accent){var a=ACP.filter(function(p){return p[0].toLowerCase()===String(pr.accent).toLowerCase();})[0];if(a){acPreset(a)(state);n++;}}
+  }
+  if(n){applyFonts&&applyFonts();render();syncAll();buildBar();persist();pushHist();takeSnap();updateThumb(deck.i);}
+  return n;
+}
+
+/* ---- chat panel ---- */
+var chat=[];try{chat=JSON.parse(localStorage.getItem(CHK)||'[]').slice(-30);}catch(e){chat=[];}
+var panel=$('#panel'),log,inp,pane;
+function saveChat(){try{localStorage.setItem(CHK,JSON.stringify(chat.slice(-30)));}catch(e){}}
+function build(){
+  pane=document.createElement('section');pane.id='aiPane';pane.setAttribute('aria-label','AI assistant');
+  pane.innerHTML='<div class="ahd"><span class="fname">AI assistant</span>'
+   +'<button class="ico" type="button" id="aiSet" aria-label="AI settings" title="AI settings">'+icon('sliders')+'</button>'
+   +'<button class="ico" type="button" id="aiClr" aria-label="Clear chat" title="Clear chat">'+icon('trash')+'</button>'
+   +'<button class="ico" type="button" id="aiX" aria-label="Close" title="Close">'+icon('x')+'</button></div>'
+   +'<div id="aiSetup"></div>'
+   +'<div id="aiLog" role="log" aria-live="polite"></div>'
+   +'<div id="aiChips"></div>'
+   +'<form id="aiForm"><textarea id="aiIn" rows="1" placeholder="Tell me what to change..." aria-label="Message"></textarea><button class="btn primary" type="submit">Send</button></form>';
+  panel.insertBefore(pane,panel.firstChild);
+  log=$('#aiLog');inp=$('#aiIn');
+  $('#aiX').addEventListener('click',function(){toggle(false);});
+  $('#aiSet').addEventListener('click',settings);
+  $('#aiClr').addEventListener('click',function(){chat=[];saveChat();draw0();});
+  $('#aiForm').addEventListener('submit',function(e){e.preventDefault();send(inp.value);});
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(inp.value);}});
+  inp.addEventListener('input',function(){inp.style.height='auto';inp.style.height=Math.min(140,inp.scrollHeight)+'px';});
+  var chips=[['Next week, Nov 7','Next Saturday is the meeting. Set the dates for it (Saturday in India, Friday in the US).'],['Emerald theme','Use the emerald colours with a sage background'],['New speaker','The word is by PASTOR HEMANTH AMARA, Maryland USA'],['Change Zoom','Change the Zoom meeting ID to ']];
+  var ch=$('#aiChips');chips.forEach(function(c){var b=document.createElement('button');b.type='button';b.textContent=c[0];b.addEventListener('click',function(){inp.value=c[1];inp.focus();});ch.appendChild(b);});
+  draw0();
+}
+function draw0(){
+  var ok=ready(),su=$('#aiSetup');
+  su.style.display=ok?'none':'block';log.style.display=ok?'':'none';$('#aiChips').style.display=ok?'':'none';$('#aiForm').style.display=ok?'':'none';
+  if(!ok){su.innerHTML='<p>Add your own AI key to let an assistant edit this flyer from plain words, such as "make it next Saturday with an emerald theme". Works with OpenRouter or any OpenAI-style address. The key stays in this browser.</p><button class="btn" type="button" id="aiGo">Set up AI</button>';$('#aiGo').addEventListener('click',settings);return;}
+  log.textContent='';
+  if(!chat.length)add('note','Ask me to change names, dates and times, Zoom details, colours or fonts. I cannot add photos; use the Photos tool for those.');
+  chat.forEach(function(m){add(m.r,m.t,true);});
+  log.scrollTop=log.scrollHeight;
+}
+function add(kind,text,quiet){var d=document.createElement('div');d.className='m '+kind;d.textContent=text;log.appendChild(d);if(!quiet)log.scrollTop=log.scrollHeight;return d;}
+function toggle(on){
+  if(!pane)build();
+  panel.classList.toggle('ai-on',on);
+  var b=$('#aiBtn');if(b)b.setAttribute('aria-pressed',String(on));
+  if(on){selectTarget(null);panel.classList.add('ai-on');if(ready())setTimeout(function(){inp.focus();},50);}
+}
+var busyAI=false;
+function send(text){
+  text=String(text||'').trim();if(!text||busyAI||!ready())return;
+  busyAI=true;inp.value='';inp.style.height='auto';
+  chat.push({r:'me',t:text});add('me',text);
+  var wait=add('bot','Thinking...');
+  var hist=chat.slice(-9,-1).map(function(m){return {role:m.r==='me'?'user':'assistant',content:m.t};});
+  var msgs=[{role:'system',content:systemPrompt()}].concat(hist,[{role:'user',content:text+'\n\nCurrent flyer:\n'+JSON.stringify(cleanFlyer())}]);
+  ask(msgs).then(function(out){
+    var n=applyEdits(out),reply=String(out&&out.reply||(n?'Done.':'I did not change anything.')).slice(0,600);
+    wait.textContent=reply;
+    if(n){var c=document.createElement('div');c.className='chg';c.textContent=n+(n===1?' change':' changes')+' applied.';
+      var u=document.createElement('button');u.type='button';u.textContent='Undo';u.addEventListener('click',function(){undo();u.disabled=true;c.textContent='Undone.';});c.appendChild(u);wait.appendChild(c);}
+    chat.push({r:'bot',t:reply});saveChat();
+  }).catch(function(e){wait.className='m bot bad';wait.textContent=(e&&e.kind)?e.message:'Something went wrong. Try again.';chat.pop();saveChat();})
+  .then(function(){busyAI=false;log.scrollTop=log.scrollHeight;});
+}
+function settings(){
+  var s=getAI(),dlg=document.createElement('dialog');dlg.className='aid';
+  dlg.innerHTML='<form method="dialog" id="aiF"><h2>AI settings</h2><p class="nt">Stored in this browser only, not in templates or downloads. What you type to the assistant, and your flyer text, is sent to the address below.</p>'
+   +'<label><span>Provider</span><select id="aiP"><option value="">Custom</option>'+PROVIDERS.map(function(p,i){return '<option value="'+i+'"'+(p[1]===s.url?' selected':'')+'>'+esc(p[0])+'</option>';}).join('')+'</select></label>'
+   +'<label><span>Address</span><input id="aiU" value="'+esc(s.url)+'" autocomplete="off" spellcheck="false"></label>'
+   +'<label><span>API key</span><input id="aiKey" type="password" value="'+esc(s.key)+'" autocomplete="off" placeholder="Paste your key"></label>'
+   +'<label><span>Model</span><input id="aiM" value="'+esc(s.model)+'" autocomplete="off" spellcheck="false"></label>'
+   +'<label><span>Backup model (used if the first fails, optional)</span><input id="aiB" value="'+esc(s.backup)+'" autocomplete="off" spellcheck="false"></label>'
+   +'<p class="st" id="aiSt" role="status"></p><div class="acts"><button type="button" class="btn" id="aiT">Test connection</button><button type="button" class="btn" id="aiC">Close</button><button type="submit" class="btn primary">Save</button></div></form>';
+  document.body.appendChild(dlg);dlg.showModal();
+  var q=function(i){return dlg.querySelector(i);},st=q('#aiSt');
+  var rd=function(){return {url:q('#aiU').value,key:q('#aiKey').value,model:q('#aiM').value,backup:q('#aiB').value};};
+  function close(){dlg.close();dlg.remove();}
+  q('#aiP').addEventListener('change',function(){var p=PROVIDERS[this.value];if(p){q('#aiU').value=p[1];q('#aiM').value=p[2];}});
+  q('#aiC').addEventListener('click',close);
+  dlg.addEventListener('cancel',function(e){e.preventDefault();close();});
+  q('#aiF').addEventListener('submit',function(e){e.preventDefault();saveAI(rd());close();if(pane)draw0();});
+  q('#aiT').addEventListener('click',function(){saveAI(rd());st.dataset.k='';st.textContent='Testing...';
+    chatOnce([{role:'user',content:'Reply with the single word OK.'}],getAI().model,64).then(function(r){st.dataset.k='ok';st.textContent='Connected. '+getAI().model+' replied: '+r.slice(0,40);},function(e){st.dataset.k='bad';st.textContent=e.message||'Could not connect.';});});
+}
+$('#aiBtn').addEventListener('click',function(){toggle(!panel.classList.contains('ai-on'));});
+/* picking any other tool or clicking the flyer returns to the normal options */
+var _sel=selectTarget;selectTarget=function(k){if(k&&panel.classList.contains('ai-on')){panel.classList.remove('ai-on');var b=$('#aiBtn');if(b)b.setAttribute('aria-pressed','false');}return _sel(k);};
+window.__aiToggle=toggle;
+})();
 
 /* ---------- boot ---------- */
 try{
