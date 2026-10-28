@@ -48,7 +48,7 @@ function makeServer() {
 const app = express();
 app.use(express.json({ limit: '25mb' }));
 const here = path.dirname(fileURLToPath(import.meta.url));
-const BUILD = 'studio-ui+chromium-fallback';   // shown at /healthz so you can tell which build is live
+const BUILD = 'studio-ui+chromium-fallback+diag';   // shown at /healthz so you can tell which build is live
 // The studio itself (the flyer maker UI) is served at the site root.
 app.get(['/', '/index.html'], (_req, res) => res.sendFile(path.join(here, 'flyer-studio.html')));
 app.get('/healthz', (_req, res) => res.type('text').send('ok ' + BUILD));
