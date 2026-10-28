@@ -223,6 +223,29 @@ dialog.aid .acts .btn{color:var(--ui-text)} dialog.aid .acts .btn.primary{color:
 #layers .lr .ty{width:18px;color:var(--ui-dim);text-align:center;font-weight:700;font-size:12px}
 #layers .lr.off{opacity:.5}
 #layers .ls{max-height:250px;overflow:auto}
+
+/* Floating layout (D): full canvas, bottom pill toolbar, floating cards */
+#pill{display:none}
+html.fd #rail,html.fd .dockhead,html.fd #sheetBody,html.fd #stripTog{display:none}
+html.fd #dock{display:contents}
+html.fd #canvasWrap{padding-bottom:78px}
+@media (min-width:761px){html.fd.fdp #canvasWrap{padding-right:350px}}
+html.fd #panel{display:none;position:fixed;right:14px;top:62px;bottom:136px;width:330px;border:1px solid #33353b;border-radius:14px;background:#1d1e22;box-shadow:0 10px 40px #000a;z-index:30;overflow:auto;padding-bottom:10px}
+html.fd.fdp #panel{display:block}
+html.fd.fdp #panel.ai-on{display:flex}
+html.fd #layers{display:none;border-bottom:1px solid var(--ui-line)} html.fd.fdl #layers{display:block}
+html.fd #panel.ai-on #layers{display:none}
+html.fd #strip{display:none;position:fixed;left:12px;right:12px;bottom:136px;z-index:29;border:1px solid #33353b;border-radius:14px;background:#1d1e22;box-shadow:0 10px 40px #000a;padding:10px 12px}
+html.fd.fds #strip{display:flex}
+html.fd #pill{display:flex;position:fixed;left:50%;transform:translateX(-50%);bottom:54px;z-index:31;gap:2px;padding:6px 8px;background:#1d1e22;border:1px solid #33353b;border-radius:18px;box-shadow:0 10px 40px #000a}
+#pill button{border:0;background:transparent;color:#9a9aa2;font:inherit;font-size:10px;width:62px;padding:5px 0;border-radius:12px;cursor:pointer}
+#pill button b{display:block;font-size:18px;font-weight:400;color:#ddd;line-height:1.2}
+#pill button[aria-pressed=true]{background:#2f3b57;color:#fff} #pill button:hover{background:#26272c}
+@media (max-width:760px){
+  html.fd #panel{left:8px;right:8px;top:auto;bottom:136px;width:auto;height:42vh}
+  html.fd #pill{width:calc(100vw - 16px);justify-content:space-around;padding:5px 2px}#pill button{width:auto;flex:1;font-size:9px}
+  html.fd #canvasWrap{padding-bottom:96px}
+}
 /* ---------- The flyer (fixed 2000 x 1125 canvas) ---------- */
 #stage{position:absolute;left:0;top:0;width:2000px;height:1125px;overflow:hidden;transform-origin:0 0;font-family:Montserrat,'Segoe UI',Arial,sans-serif;color:#1c1415;
   --maroon:#7d1226;--maroon2:#96243b;--gold:#c9a15a;--ink:#1c1415}
@@ -373,6 +396,7 @@ dialog.aid .acts .btn{color:var(--ui-text)} dialog.aid .acts .btn.primary{color:
     </div>
   </div>
   <div id="strip"></div>
+  <nav id="pill" aria-label="Tools"><button type="button" data-p="move" aria-pressed="true"><b>&#10021;</b>Move</button><button type="button" data-p="text"><b>T</b>Text</button><button type="button" data-p="photo"><b>&#9639;</b>Photo</button><button type="button" data-p="colour"><b>&#9680;</b>Colour</button><button type="button" data-p="dates"><b>&#128467;</b>Dates</button><button type="button" data-p="layers"><b>&#8801;</b>Layers</button><button type="button" data-p="flyers"><b>&#9636;</b>Flyers</button><button type="button" data-p="ai"><b>&#10022;</b>AI</button></nav>
 </div>
 
 <div class="ov" id="ov" hidden>
@@ -1044,6 +1068,7 @@ function menu(anchor,items,alignRight){
   document.body.appendChild(p);
   var r=anchor.getBoundingClientRect();
   p.style.top=(r.bottom+8)+'px';
+  if(r.bottom+8+p.offsetHeight>window.innerHeight-8)p.style.top=Math.max(8,r.top-8-p.offsetHeight)+'px';
   if(alignRight){p.style.right=Math.max(8,window.innerWidth-r.right)+'px';}else{p.style.left=Math.max(8,Math.min(r.left,window.innerWidth-p.offsetWidth-8))+'px';}
   openPop=p;
   setTimeout(function(){document.addEventListener('click',function h(e){if(openPop&&!openPop.contains(e.target)){closePop();}document.removeEventListener('click',h);},{once:false});},0);
@@ -1104,7 +1129,10 @@ $('#dlBtn').addEventListener('click',function(e){
     {label:'PNG',hint:'1280 \u00d7 720',fn:function(){exportAs('png',0.64);}},
     '-',
     {label:'JPG',hint:'2000 \u00d7 1125',fn:function(){exportAs('jpg',1);}},
-    {label:'JPG',hint:'1280 \u00d7 720, smaller file',fn:function(){exportAs('jpg',0.64);}}
+    {label:'JPG',hint:'1280 \u00d7 720, smaller file',fn:function(){exportAs('jpg',0.64);}},
+    {label:'JPG for WhatsApp',hint:'1280 wide',fn:function(){exportAs('jpg',0.64);}},
+    '-',
+    {label:'All flyers (zip)',hint:'every flyer in this deck',fn:function(){downloadAll();}}
   ],true);
 });
 $('#quickDl').addEventListener('click',function(){exportAs('png',1);});
@@ -1168,6 +1196,9 @@ function resetFlyer(){
 $('#fileBtn').addEventListener('click',function(e){
   e.stopPropagation();
   menu(this,[
+    {label:'Make flyers from a schedule...',fn:scheduleDlg},
+    {label:'Download all flyers (zip)',fn:function(){downloadAll();}},
+    '-',
     {label:'Save template',hint:'.json',fn:saveTemplate},
     {label:'Load template\u2026',fn:function(){$('#tfile').click();}},
     '-',
@@ -1179,10 +1210,49 @@ $('#addBtn').addEventListener('click',function(e){
   menu(this,[
     {label:'Duplicate this flyer',fn:function(){duplicate(deck.i);}},
     {label:'New flyer, original layout',fn:addBlank},
-    {label:'Make flyers from a schedule...',fn:scheduleDlg}
+    {label:'Make flyers from a schedule...',fn:scheduleDlg},
+    '-',
+    {label:'Download all flyers (zip)',fn:function(){downloadAll();}}
   ]);
 });
 
+
+/* ---------- download every flyer as one zip (no library: files are stored, not compressed) ---------- */
+var CRCT=null;
+function crc32(u8){if(!CRCT){CRCT=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRCT[n]=c>>>0;}}
+  var c2=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c2=CRCT[(c2^u8[i])&255]^(c2>>>8);return (c2^0xFFFFFFFF)>>>0;}
+function zipStore(files){
+  var enc=new TextEncoder(),parts=[],cen=[],off=0;
+  function u16(v){return [v&255,(v>>8)&255];} function u32(v){return [v&255,(v>>8)&255,(v>>16)&255,(v>>>24)&255];}
+  files.forEach(function(f){
+    var nm=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+    var lh=new Uint8Array([0x50,0x4b,3,4].concat(u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(crc),u32(sz),u32(sz),u16(nm.length),u16(0)));
+    parts.push(lh,nm,f.data);
+    cen.push(new Uint8Array([0x50,0x4b,1,2].concat(u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(crc),u32(sz),u32(sz),u16(nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off))),nm);
+    off+=lh.length+nm.length+sz;
+  });
+  var cs=0;cen.forEach(function(c){cs+=c.length;});
+  var end=new Uint8Array([0x50,0x4b,5,6].concat(u16(0),u16(0),u16(files.length),u16(files.length),u32(cs),u32(off),u16(0)));
+  return new Blob(parts.concat(cen,[end]),{type:'application/zip'});
+}
+function downloadAll(){
+  if(busy)return;
+  if(deck.flyers.length<2){exportAs('png',1);return;}
+  busy=true;endEdit(true);selectTarget(null);flush();
+  var keep=deck.i,files=[],chain=Promise.resolve();
+  toast('Preparing '+deck.flyers.length+' flyers...');
+  deck.flyers.forEach(function(f,i){
+    chain=chain.then(function(){deck.i=i;bind();toast('Flyer '+(i+1)+' of '+deck.flyers.length+'...');return draw(1);})
+      .then(function(cv){return new Promise(function(res,rej){cv.toBlob(function(b){b?res(b):rej(new Error('An image could not be created.'));},'image/png');});})
+      .then(function(b){return b.arrayBuffer();})
+      .then(function(ab){var who=(state.left.name||'flyer').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30);
+        files.push({name:('0'+(i+1)).slice(-2)+'-'+baseName()+'-'+who+'.png',data:new Uint8Array(ab)});});
+  });
+  chain.then(function(){var n=(deck.name||'agiwm-flyers').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'agiwm-flyers';
+      deck.i=keep;bind();render();return saveBlob(zipStore(files),n+'.zip');})
+    .catch(function(err){toast((err&&err.message)||'The flyers could not be created.');})
+    .then(function(){deck.i=keep;bind();render();syncAll();busy=false;});
+}
 
 /* ---------- schedule -> many flyers ---------- */
 var MONTHS=['january','february','march','april','may','june','july','august','september','october','november','december'];
@@ -1274,16 +1344,42 @@ function scheduleDlg(){
       ls.appendChild(b);
     });
   };
-  function set(on,quiet){
-    root.classList.toggle('ps',on);btn.setAttribute('aria-pressed',String(on));
-    btn.firstChild.textContent='Layout: '+(on?'Photoshop':'Slides');
-    try{localStorage.setItem(K,on?'ps':'slides');}catch(e){}
+  var MODES=['fd','slides','ps'],LAB={fd:'Floating',slides:'Slides',ps:'Photoshop'};
+  var layersOpen=false,stripOpen=false,mode='fd';
+  var GROUP={title:'text',sub:'text',loc:'text',script:'text',heading:'text',tags:'text',left:'photo',right:'photo',logo:'photo',colors:'colour',bg:'colour',d1:'dates',d2:'dates',zoom:'dates',yt:'dates',btn:'dates'};
+  window.fdUpdate=function(){
+    var fd=mode==='fd',pn=$('#panel'),ai=pn.classList.contains('ai-on');
+    root.classList.toggle('fdp',fd&&(!!selKey||layersOpen||ai));root.classList.toggle('fdl',fd&&layersOpen);root.classList.toggle('fds',fd&&stripOpen);
+    var act=ai?'ai':(selKey?GROUP[selKey]:null)||(layersOpen?'layers':(stripOpen?'flyers':'move'));
+    if(selKey&&layersOpen)act='layers';
+    if(window._fdp!==root.classList.contains('fdp')){window._fdp=root.classList.contains('fdp');if(typeof rescale==='function')setTimeout(rescale,40);}
+    $$('#pill button').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-p')===act));});
+  };
+  var _bl=window.buildLayers;window.buildLayers=function(){_bl();if(window.fdUpdate)fdUpdate();};
+  new MutationObserver(function(){if(window.fdUpdate)fdUpdate();}).observe($('#panel'),{attributes:true,attributeFilter:['class']});
+  function aiOff(){if(window.__aiToggle&&$('#panel').classList.contains('ai-on'))window.__aiToggle(false);}
+  $$('#pill button').forEach(function(b){b.addEventListener('click',function(){
+    var p=b.getAttribute('data-p');
+    if(p==='move'){layersOpen=false;stripOpen=false;aiOff();selectTarget(null);}
+    else if(p==='text'){layersOpen=false;aiOff();selectTarget(GROUP[selKey]==='text'?selKey:'title');}
+    else if(p==='photo'){layersOpen=false;aiOff();selectTarget(GROUP[selKey]==='photo'?selKey:'left');}
+    else if(p==='colour'){layersOpen=false;aiOff();selectTarget('colors');}
+    else if(p==='dates'){layersOpen=false;aiOff();selectTarget(GROUP[selKey]==='dates'?selKey:'d1');}
+    else if(p==='layers'){aiOff();layersOpen=!layersOpen;buildBar();}
+    else if(p==='flyers'){stripOpen=!stripOpen;var st=$('#strip');if(stripOpen)st.classList.remove('off');fdUpdate();}
+    else if(p==='ai'){layersOpen=false;window.__aiToggle(!$('#panel').classList.contains('ai-on'));}
+    fdUpdate();
+  });});
+  function set(m,quiet){
+    mode=m;root.classList.toggle('ps',m==='ps');root.classList.toggle('fd',m==='fd');
+    btn.setAttribute('aria-pressed',String(m!=='slides'));btn.firstChild.textContent='Layout: '+LAB[m];
+    try{localStorage.setItem(K,m);}catch(e){}
     if(typeof rescale==='function')setTimeout(rescale,30);
-    buildLayers();if(!quiet)toast(on?'Photoshop layout: toolbox left, layers and options right.':'Slides layout.');
+    buildLayers();fdUpdate();if(!quiet)toast(m==='fd'?'Floating layout: canvas first, tools in the bar below.':m==='ps'?'Photoshop layout: toolbox left, layers and options right.':'Slides layout.');
   }
-  btn.addEventListener('click',function(){set(!root.classList.contains('ps'));});
-  var on=false;try{on=localStorage.getItem(K)==='ps';}catch(e){}
-  set(on,true);
+  btn.addEventListener('click',function(){set(MODES[(MODES.indexOf(mode)+1)%3]);});
+  var m0='fd';try{var sv=localStorage.getItem(K);if(sv==='ps'||sv==='slides'||sv==='fd')m0=sv;}catch(e){}
+  set(m0,true);
 })();
 
 /* ---------- keyboard ---------- */

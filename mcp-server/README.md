@@ -35,3 +35,14 @@ Chromium is bundled (`@sparticuz/chromium`); `CHROMIUM_PATH` can point at a syst
 ## Text styling
 
 Every text on the flyer has its own colour, opacity, size and letter spacing (studio: click the text, scroll to its "style" group, or open "Text styles"; AI assistant and MCP `text_styles` do the same). Layer keys: ttl, sub, loc, scr, hd, tags, lbL/nmL/plL, lbR/nmR/plR, d1dt/d1wd/d1tm, d2dt/d2wd/d2tm, zl, zid, zpw, yl, yh, jt.
+
+## Monthly schedule (MCP tools and API)
+
+- `plan_schedule` - paste a list like "1st week of November Rev X / 2nd week ... Dr Y"; get one planned flyer per week (Saturdays by default, US date the day before, a different colour set each, photo from the library when the name matches).
+- `make_schedule` - the same, then renders every week as an image (good for a WhatsApp group). `common` holds anything shared by all weeks.
+- `publish_week` - load week N of the last plan into the live flyer open in the studio.
+- HTTP: `POST /api/schedule {"text": "..."}` then `GET /api/schedule/2.png?size=1280x720` (key as `?k=` or `x-flyer-key`).
+
+## Studio layouts
+
+The header button cycles Floating (default), Slides and Photoshop. Floating: canvas first, a tool bar at the bottom (Move, Text, Photo, Colour, Dates, Layers, Flyers, AI) and a card with the options. Download menu: PNG/JPG sizes, JPG for WhatsApp, and all flyers as one zip.
