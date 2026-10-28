@@ -8,12 +8,13 @@ import { flyerShape, buildFlyer, describe, FONTS, FLAGS, BG_PRESETS, ACCENTS } f
 import { renderFlyer } from './renderer.js';
 import * as live from './live.js';
 import * as people from './people.js';
+import * as schedule from './schedule.js';
 
 const PORT = process.env.PORT || 8080;
 const SECRET = process.env.MCP_SECRET || '';   // protects /mcp/<secret> and /api/*
 const here = path.dirname(fileURLToPath(import.meta.url));
 const STUDIO = process.env.STUDIO_FILE || path.join(here, 'flyer-studio.html');
-const BUILD = 'live-sync+people+dst+textstyle+schedule2+layout';   // shown at /healthz so you can tell which build is live
+const BUILD = 'live-sync+people+dst+textstyle+schedule2+layout+mcp-schedule+free-edit';   // shown at /healthz so you can tell which build is live
 
 const text = (t) => ({ content: [{ type: 'text', text: t }] });
 const fail = (e) => ({ isError: true, content: [{ type: 'text', text: e.message || String(e) }] });
@@ -91,6 +92,49 @@ function makeServer() {
   s.registerTool('remove_person', { title: 'Remove from photo library', description: 'Delete a person\'s photo from the library.', inputSchema: { name: z.string() } },
     async ({ name }) => { try { return text(`Removed ${people.remove(name)}.`); } catch (e) { return fail(e); } });
 
+
+  s.registerTool('plan_schedule', {
+    title: 'Plan flyers from a monthly schedule',
+    description: 'Paste a monthly speaker list (e.g. "1st week of November Rev Rajakumari ... 2nd week ... Dr Nirmala ...") and get one planned flyer per week: speaker, India date (default Saturdays), US date (the day before), and a different colour set for each. People found in the photo library get their photo automatically. Nothing is rendered; use make_schedule for images or publish_week to load one week into the live studio flyer.',
+    inputSchema: { text: z.string().max(4000), weekday: z.enum(['sunday','monday','tuesday','wednesday','thursday','friday','saturday']).optional(), time_left: z.string().max(30).optional(), time_right: z.string().max(30).optional() },
+  }, async ({ text: t, weekday, time_left, time_right }) => {
+    try {
+      const p = await schedule.plan(t, { weekday, timeLeft: time_left, timeRight: time_right });
+      return text(`Planned ${p.weeks.length} flyers for ${p.month} ${p.year}:\n` + p.weeks.map((w) => `Week ${w.week}: ${w.speaker} - India ${w.date}, US ${w.usDate}, ${w.args.accent?.preset || 'default'} on ${w.args.background?.preset || 'default'}${w.photo ? ', photo from library' : ', no photo yet'}`).join('\n') + (p.skipped.length ? `\nSkipped (no such week): ${p.skipped.join(', ')}` : ''));
+    } catch (e) { return fail(e); }
+  });
+
+  s.registerTool('make_schedule', {
+    title: 'Make all flyers for a monthly schedule',
+    description: 'Like plan_schedule, then renders every week as an image (one-off flyers; the live studio flyer is not touched). Add anything shared by all weeks in "common" (zoom details, right speaker, fonts...). Best for sending the month to a WhatsApp group.',
+    inputSchema: { text: z.string().max(4000), weekday: z.enum(['sunday','monday','tuesday','wednesday','thursday','friday','saturday']).optional(), time_left: z.string().max(30).optional(), time_right: z.string().max(30).optional(),
+      common: z.object(flyerShape).partial().optional(), ...outOpts },
+  }, async ({ text: t, weekday, time_left, time_right, common = {}, format = 'jpg', size = '1280x720' }) => {
+    try {
+      const p = await schedule.plan(t, { weekday, timeLeft: time_left, timeRight: time_right });
+      const content = [{ type: 'text', text: `Rendered ${p.weeks.length} flyers for ${p.month} ${p.year}: ` + p.weeks.map((w) => `week ${w.week} ${w.speaker} (${w.date})`).join('; ') + (p.weeks.some((w) => !w.photo) ? '. No photo in the library for: ' + p.weeks.filter((w) => !w.photo).map((w) => w.speaker).join(', ') + '.' : '.') }];
+      for (const w of p.weeks) {
+        const args = { ...common, ...w.args, left_speaker: { ...(common.left_speaker || {}), ...w.args.left_speaker } };
+        const buf = await renderFlyer(await buildFlyer(args), { format, scale: sizeScale(size) });
+        content.push({ type: 'text', text: `Week ${w.week}: ${w.speaker}, ${w.date}` }, { type: 'image', data: buf.toString('base64'), mimeType: format === 'jpg' ? 'image/jpeg' : 'image/png' });
+      }
+      return { content };
+    } catch (e) { return fail(new Error('Could not make the schedule: ' + e.message)); }
+  });
+
+  s.registerTool('publish_week', {
+    title: 'Load one planned week into the live flyer',
+    description: 'After plan_schedule or make_schedule, put week N (1, 2, 3...) into the live flyer open in the studio, so it can be edited by hand.',
+    inputSchema: { week: z.number().int().min(1).max(5), by: z.string().max(30).optional() },
+  }, async ({ week, by = 'Claude' }) => {
+    try {
+      const p = schedule.lastPlan(); if (!p) throw new Error('Plan a schedule first (plan_schedule).');
+      const w = p.weeks.find((x) => x.week === week); if (!w) throw new Error(`Week ${week} is not in the plan (planned: ${p.weeks.map((x) => x.week).join(', ')}).`);
+      const v = live.patch(await buildFlyer(w.args), { by, text: `Loaded week ${w.week}: ${w.speaker}, ${w.date}` });
+      return text(`Live flyer now shows week ${w.week}: ${w.speaker} (${w.date}), version ${v}.`);
+    } catch (e) { return fail(e); }
+  });
+
   s.registerTool('flyer_options', { title: 'Flyer options', description: 'List the fonts, flags, background gradients and accent colour presets the tools accept, and the defaults.', inputSchema: {} },
     async () => text(JSON.stringify({ fonts: FONTS, flags: FLAGS, background_presets: Object.keys(BG_PRESETS), accent_presets: Object.keys(ACCENTS),
       defaults: { title: 'AGIWM', subtitle: 'AMAZING GOD INTERNATIONAL WOMEN’S MINISTRIES', location: 'MARYLAND USA', script_word: 'Women’s', heading: 'Prayer Meeting', tags: ['Pray', 'Be Encouraged', 'Grow Together'],
@@ -127,6 +171,19 @@ app.post('/api/patch', authed, async (req, res) => {
 app.get('/api/render.png', authed, async (req, res) => {
   try { const buf = await renderFlyer(live.get().flyer, { format: 'png', scale: sizeScale(req.query.size) }); res.type('png').send(buf); }
   catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Bot/API: POST {"text":"1st week of November ...","weekday":"saturday"} -> plan; GET /api/schedule/2.png renders week 2 of the last plan.
+app.post('/api/schedule', authed, async (req, res) => {
+  try { const { text: t, weekday, time_left, time_right } = req.body || {}; const p = await schedule.plan(t, { weekday, timeLeft: time_left, timeRight: time_right }); res.json({ month: p.month, year: p.year, weeks: p.weeks.map(({ week, speaker, date, usDate, photo }) => ({ week, speaker, date, usDate, photo })), skipped: p.skipped }); }
+  catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.get('/api/schedule/:n.:ext', authed, async (req, res) => {
+  try {
+    const p = schedule.lastPlan(), w = p && p.weeks.find((x) => x.week === +req.params.n); if (!w) return res.status(404).json({ error: 'No such week in the last plan.' });
+    const fmt = req.params.ext === 'jpg' ? 'jpg' : 'png'; const buf = await renderFlyer(await buildFlyer(w.args), { format: fmt, scale: sizeScale(req.query.size || '1280x720') });
+    res.type(fmt === 'jpg' ? 'jpeg' : 'png').send(buf);
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.get('/api/people', authed, (_req, res) => res.json(people.list()));
 

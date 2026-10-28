@@ -1,6 +1,6 @@
 // Maps friendly tool input onto the studio's flyer state.
 import { z } from 'zod';
-const STYLE_LAYERS = ['ttl','sub','loc','scr','hd','tags','lbL','nmL','plL','lbR','nmR','plR','d1dt','d1wd','d1tm','d2dt','d2wd','d2tm','zl','zid','zpw','yl','yh','jt'];
+const STYLE_LAYERS = ['ttl','sub','loc','scr','hd','tags','tg0','tg1','tg2','lbL','nmL','plL','lbR','nmR','plR','d1dt','d1wd','d1tm','d2dt','d2wd','d2tm','zl','zid','zpw','yl','yh','jt','logo','left','right','d1','d2','zoom','yt','btn'];
 import * as people from './people.js';
 import { shrinkImage } from './renderer.js';
 
@@ -48,7 +48,14 @@ export const flyerShape = {
     size: z.number().min(0.4).max(2.5).optional().describe('size multiplier, 1 = normal'),
     spacing: z.number().min(-3).max(30).optional().describe('extra letter spacing in px'),
     text: z.string().max(40).optional().describe('only for d1dt, d1wd, d2dt, d2wd: replaces the automatic date/weekday text'),
-  })).optional().describe('Per-text colour / opacity / size / spacing. Layers: ttl title, sub subtitle, loc location, scr script word, hd heading, tags, lbL/nmL/plL left label/name/place, lbR/nmR/plR right, d1dt/d1wd/d1tm and d2dt/d2wd/d2tm date, weekday, time, zl zoom heading, zid meeting-id line, zpw password line, yl youtube heading, yh handle, jt button text'),
+    font: z.union([font, z.literal('')]).optional().describe('font for this one text only ("" = follow the group font)'),
+    weight: z.enum(['', '400', '500', '600', '700', '800', '900']).optional().describe('font weight'),
+    capitals: z.enum(['', 'none', 'uppercase', 'lowercase', 'capitalize']).optional().describe('text case'),
+    move_x: z.number().min(-600).max(600).optional().describe('px to move right (negative = left)'),
+    move_y: z.number().min(-400).max(400).optional().describe('px to move down (negative = up)'),
+    rotate: z.number().min(-180).max(180).optional().describe('degrees'),
+    visible: z.boolean().optional().describe('false hides this text'),
+  })).optional().describe('Every text and object can be styled on its own. Text layers: ttl title, sub subtitle, loc location, scr script word, hd heading, tg0/tg1/tg2 the three taglines (tags = all three), lbL/nmL/plL left label/name/second line, lbR/nmR/plR right, d1dt/d1wd/d1tm and d2dt/d2wd/d2tm date, weekday, time, zl zoom heading, zid meeting-id line, zpw password line, yl youtube heading, yh handle, jt button text. Object layers (only opacity, size as scale, move_x, move_y, rotate): logo, left, right (speaker cards), d1, d2 (time boxes), zoom, yt, btn')
 };
 
 const clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
@@ -113,8 +120,9 @@ export async function buildFlyer(a) {
   if (a.text_styles) {
     const sty = {};
     for (const [k, v] of Object.entries(a.text_styles)) {
-      const o = clean({ col: v.color, op: v.opacity, sz: v.size, ls: v.spacing, tx: v.text });
-      if (Object.keys(o).length) sty[k] = o;
+      const o = clean({ col: v.color, op: v.opacity, sz: v.size, ls: v.spacing, tx: v.text, font: v.font, wt: v.weight, cs: v.capitals, dx: v.move_x, dy: v.move_y, rot: v.rotate, vis: v.visible });
+      if (!Object.keys(o).length) continue;
+      for (const t of (k === 'tags' ? ['tg0', 'tg1', 'tg2'] : [k])) sty[t] = { ...(sty[t] || {}), ...o };
     }
     if (Object.keys(sty).length) f.sty = sty;
   }

@@ -24,8 +24,8 @@ try{
   chk('photo applied in UI',await pg.evaluate(()=>{const e=document.querySelector('#stage .ph');return !!e&&/url\(/.test(e.style.backgroundImage||getComputedStyle(e).backgroundImage);}));
   await pg.click('#liveBtn'); await pg.waitForTimeout(200); const feedTxt=await pg.innerText('#liveFeed'); chk('feed shows instruction',/Claude/.test(feedTxt)&&/left speaker/.test(feedTxt)); await pg.screenshot({path:S+'live1.png'});
   // UI -> server
-  await pg.keyboard.press('Escape'); await pg.click('#zl'); await pg.waitForTimeout(300);
-  const inp=pg.locator('#props input[type=text]').nth(1); await inp.fill('999 888 7777'); await pg.waitForTimeout(1800);
+  await pg.keyboard.press('Escape'); await pg.click('#zid'); await pg.waitForTimeout(300);
+  const inp=pg.locator('#props input[type=text]').first(); await inp.fill('999 888 7777'); await pg.waitForTimeout(1800);
   const g=await c.callTool({name:'get_flyer',arguments:{}}); chk('Claude sees hand edit',g.content[0].text.includes('999 888 7777')); chk('photo kept on server after UI send',g.content[0].text.includes('"photo": "(set)"'));
   // render current
   const rc=await c.callTool({name:'render_current_flyer',arguments:{size:'1280x720'}}); chk('render current returns image',rc.content.some(x=>x.type==='image'));

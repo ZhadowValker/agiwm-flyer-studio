@@ -34,7 +34,7 @@ Chromium is bundled (`@sparticuz/chromium`); `CHROMIUM_PATH` can point at a syst
 
 ## Text styling
 
-Every text on the flyer has its own colour, opacity, size and letter spacing (studio: click the text, scroll to its "style" group, or open "Text styles"; AI assistant and MCP `text_styles` do the same). Layer keys: ttl, sub, loc, scr, hd, tags, lbL/nmL/plL, lbR/nmR/plR, d1dt/d1wd/d1tm, d2dt/d2wd/d2tm, zl, zid, zpw, yl, yh, jt.
+Nothing is grouped: every text and every object (logo, speaker cards, time boxes, Zoom block, YouTube block, button) is its own layer. Click any one, or pick it in Layers, to change its text, font, colour, opacity, size, letter spacing, weight, capitals, position (drag it, or use the arrow keys; Shift = 10px), rotation and visibility. The AI assistant and MCP `text_styles` do the same (`font`, `weight`, `capitals`, `move_x`, `move_y`, `rotate`, `visible`, plus colour / opacity / size / spacing). Text layer keys: ttl, sub, loc, scr, hd, tg0/tg1/tg2 (`tags` = all three), lbL/nmL/plL, lbR/nmR/plR, d1dt/d1wd/d1tm, d2dt/d2wd/d2tm, zl, zid, zpw, yl, yh, jt. Object layer keys (opacity, size, move, rotate only): logo, left, right, d1, d2, zoom, yt, btn.
 
 ## Monthly schedule (MCP tools and API)
 
