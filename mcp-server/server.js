@@ -169,6 +169,7 @@ function makeServer() {
 const app = express();
 app.use(express.json({ limit: '30mb' }));
 app.get(['/', '/index.html'], (_req, res) => res.sendFile(STUDIO));
+app.get(['/privacy', '/privacy.html'], (_req, res) => res.sendFile(path.join(here, 'privacy.html')));   // linked from the Google sign-in screen
 app.get('/healthz', (_req, res) => res.type('text').send('ok ' + BUILD));
 
 // ---- live flyer API (used by the studio page now, and by a WhatsApp bot later) ----
