@@ -210,6 +210,19 @@ app.get('/api/schedule/:n.:ext', authed, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.get('/api/people', authed, (_req, res) => res.json(people.list()));
+// Studio: save a speaker's photo to the library, and look one up by name (exact name or alias only).
+app.post('/api/people', authed, async (req, res) => {
+  try { const { name, place = '', dataUrl } = req.body || {};
+    if (!name || !/^data:image\/(png|jpeg|webp|gif);base64,/.test(dataUrl || '')) return res.status(400).json({ error: 'name and an image dataUrl are required' });
+    const hit = people.search(name)[0]; const aliases = hit && hit.s === 100 ? hit.p.aliases : [];
+    res.json(await people.add({ name: hit && hit.s === 100 ? hit.p.name : name, aliases, place: place || (hit && hit.s === 100 ? hit.p.place : ''), dataUrl }));
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.get('/api/people/photo', authed, async (req, res) => {
+  try { const hit = people.search(req.query.name || '')[0]; if (!hit || hit.s < 100) return res.status(404).json({ error: 'not found' });
+    res.json({ name: hit.p.name, aliases: hit.p.aliases, place: hit.p.place, dataUrl: await people.photoOf(hit.p) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
 // ---- MCP ----
 const mcpPath = SECRET ? `/mcp/${SECRET}` : '/mcp';

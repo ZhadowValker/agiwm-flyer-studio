@@ -627,7 +627,7 @@ var state=deck.flyers[0];
 var snaps={};
 var ctrls=[],barCtrls=[];
 var selKey=null,editing=null;
-function bind(){if(deck.i>=deck.flyers.length)deck.i=deck.flyers.length-1;if(deck.i<0)deck.i=0;state=deck.flyers[deck.i];}
+function bind(){if(deck.i>=deck.flyers.length)deck.i=deck.flyers.length-1;if(deck.i<0)deck.i=0;state=deck.flyers[deck.i];if(typeof PM!=='undefined'&&PM&&PM.db)setTimeout(pmCheck,0);}
 
 var pickInput=document.createElement('input');pickInput.type='file';pickInput.accept='image/*';pickInput.hidden=true;document.body.appendChild(pickInput);
 var pickKey=null,pickCfg=null;
@@ -880,6 +880,58 @@ document.addEventListener('click',function(e){
   drivePick(b.getAttribute('data-drive'),{max:1600,fmt:'auto'});
 });
 
+/* ---------- saved speaker photos: pick a photo once, it comes back with the name ----------
+   Kept in this browser (IndexedDB). When the studio is connected live, also saved to the server's
+   photo library (the one Claude's flyer tools use), and looked up there for names this browser hasn't seen. */
+var PM={db:null,mem:{},seen:{},busy:{},T:/\b(pastor|pr|ps|sis|sister|bro|brother|dr|mrs|mr|ms|rev|evangelist|prophetess|and|family|amp)\b/g};
+function pmKey(n){return String(n||'').toLowerCase().replace(/[_\-.]+/g,' ').replace(/[^a-z0-9 ]/g,' ').replace(PM.T,' ').replace(/\s+/g,' ').trim();}
+function pmLiveKey(){try{return (JSON.parse(localStorage.getItem('agiwm-flyer-live')||'{}').key)||'';}catch(e){return '';}}
+(function pmOpen(){
+  try{var rq=indexedDB.open('agiwm-people',1);
+    rq.onupgradeneeded=function(){rq.result.createObjectStore('people',{keyPath:'k'});};
+    rq.onsuccess=function(){PM.db=rq.result;var all=PM.db.transaction('people').objectStore('people').getAll();all.onsuccess=function(){(all.result||[]).forEach(function(r){PM.mem[r.k]=r;});PM.seen={};try{pmCheck();}catch(e){}};};
+  }catch(e){}
+})();
+function pmSave(name,place,photo){
+  var k=pmKey(name);if(!k||!photo)return;
+  var r={k:k,name:name,place:place||'',photo:photo,at:Date.now()};PM.mem[k]=r;
+  try{if(PM.db)PM.db.transaction('people','readwrite').objectStore('people').put(r);}catch(e){}
+  var lk=pmLiveKey();
+  if(lk)fetch('/api/people?k='+encodeURIComponent(lk),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,place:place||'',dataUrl:photo})}).catch(function(){});
+}
+function pmApply(side,r,prevPhoto){
+  var p=state[side];if(!p||pmKey(p.name)!==r.k||p.photo!==prevPhoto)return;
+  p.photo=r.photo;p.z=1;p.x=0;p.y=0;if(!p.place&&r.place)p.place=r.place;
+  PM.seen[state.id+side]={k:r.k,photo:p.photo};
+  persist();render();syncAll();takeSnap();updateThumb(deck.i);toast('Saved photo of '+r.name+' added.');
+}
+function pmCheck(){
+  if(!PM||!state)return;
+  ['left','right'].forEach(function(side){
+    var p=state[side];if(!p)return;
+    var id=state.id+side,k=pmKey(p.name),last=PM.seen[id];
+    PM.seen[id]={k:k,photo:p.photo};
+    if(!last){if(!p.photo&&k&&PM.mem[k]){var r0=PM.mem[k];setTimeout(function(){pmApply(side,r0,'');},0);}return;}
+    if(p.photo&&p.photo!==last.photo&&k){var old=PM.mem[k];if(!old||old.photo!==p.photo)pmSave(p.name,p.place,p.photo);return;}
+    if(k===last.k)return;
+    var prevOwn=last.k&&PM.mem[last.k]&&PM.mem[last.k].photo===p.photo;
+    if(p.photo&&!prevOwn)return;
+    var r=PM.mem[k],cur=p.photo;
+    if(r){setTimeout(function(){pmApply(side,r,cur);},0);return;}
+    var lk=pmLiveKey();if(!lk||!k||k.length<4)return;
+    clearTimeout(PM.busy[side]);
+    PM.busy[side]=setTimeout(function(){
+      if(pmKey(state[side].name)!==k)return;
+      fetch('/api/people/photo?k='+encodeURIComponent(lk)+'&name='+encodeURIComponent(state[side].name)).then(function(res){return res.ok?res.json():null;}).then(function(d){
+        if(!d||!d.dataUrl||pmKey(d.name)!==k&&!(d.aliases||[]).some(function(a){return pmKey(a)===k;}))return;
+        var rec={k:k,name:d.name,place:d.place||'',photo:d.dataUrl,at:Date.now()};PM.mem[k]=rec;
+        try{if(PM.db)PM.db.transaction('people','readwrite').objectStore('people').put(rec);}catch(e){}
+        pmApply(side,rec,cur);
+      }).catch(function(){});
+    },700);
+  });
+}
+
 /* ---------- Google Drive: sign in, pick an image, load it like an upload ----------
    Project agiwm-flyer-studio (AGIM USA). Scope drive.file: the studio can open only the files picked here.
    The client ID and API key are public by design; the key is limited to the Picker API and this site. */
@@ -1097,6 +1149,7 @@ function persist(){clearTimeout(saveT);setStatus('Saving\u2026');saveT=setTimeou
   catch(e){try{var d=cp(deck);d.flyers.forEach(function(f){f.logo='';f.left.photo='';f.right.photo='';f.bg.img='';});localStorage.setItem('agiwm-flyer-v2',JSON.stringify(d));setStatus('Saved without photos (browser storage is full)');}catch(e2){setStatus('Not saved in this browser');}}
 },600);}
 function changed(skip){
+  pmCheck();
   if(!skip)schedule();persist();syncAll();if(skip)placeSel();
   clearTimeout(commitT);commitT=setTimeout(function(){commitT=0;pushHist();},450);
   clearTimeout(snapT);snapT=setTimeout(function(){takeSnap();updateThumb(deck.i);},500);
