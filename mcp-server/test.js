@@ -157,6 +157,11 @@ test('image types are read from the bytes', () => {
   assert.throws(() => images.bufToDataUrl(Buffer.alloc(0)), /empty/);
   assert.throws(() => images.checkDataUrl('data:image/png;base64,' + HTML.toString('base64')), /web page/);
 });
+test('data: URLs with line breaks or extra parameters are cleaned (palette PNG showed an empty card)', () => {
+  const b64 = PNG1.split(',')[1];
+  for (const u of ['data:image/png;base64,' + b64.replace(/(.{10})/g, '$1\n'), 'data:image/png;name=a.png;base64,' + b64, 'data:application/octet-stream;base64,' + b64])
+    assert.match(images.checkDataUrl(u), /^data:image\/png;base64,[A-Za-z0-9+/=]+$/);
+});
 test('Google Drive share links are recognised', () => {
   const id = '1AbCdEfGhIjKlMnOpQrStUvWxYz012345';
   for (const u of [`https://drive.google.com/file/d/${id}/view?usp=sharing`, `https://drive.google.com/open?id=${id}`, `https://drive.google.com/uc?id=${id}&export=download`, `https://docs.google.com/uc?export=view&id=${id}`])

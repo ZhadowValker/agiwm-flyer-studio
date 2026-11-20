@@ -55,9 +55,11 @@ export function bufToDataUrl(buf, src = 'That file') {
 }
 
 export function checkDataUrl(u) {
-  const m = /^data:([^;,]*)(;base64)?,(.*)$/s.exec(u || '');
+  // Re-encoded from its bytes: line breaks in the base64, extra parameters (";name=x") or a wrong type
+  // used to reach the studio as-is, which then dropped the photo and showed an empty card.
+  const m = /^data:([^,]*),(.*)$/s.exec(String(u || '').trim());
   if (!m) throw new ImageError('That data: URL could not be read.');
-  const buf = m[2] ? Buffer.from(m[3], 'base64') : Buffer.from(decodeURIComponent(m[3]), 'latin1');
+  const buf = /;base64\s*$/i.test(m[1]) || /;base64;/i.test(m[1]) ? Buffer.from(m[2].replace(/\s+/g, ''), 'base64') : Buffer.from(decodeURIComponent(m[2]), 'latin1');
   return bufToDataUrl(buf, 'That data: image');
 }
 
