@@ -41,7 +41,7 @@ function typeError(kind, src) {
   if (kind === 'heic') return new ImageError(HEIC_HELP);
   if (kind === 'avif') return new ImageError('That is an AVIF image. Save it as JPG or PNG first.');
   if (kind === 'svg') return new ImageError('SVG drawings are not supported for photos. Use a JPG or PNG.');
-  if (kind === 'html') return new ImageError(`${src} is a web page, not an image. Use a direct link to the picture (it should open just the image).`);
+  if (kind === 'html') return new ImageError(/^https?:/.test(src) ? `${src} is a web page, not an image. Use a direct link to the picture (it should open just the image).` : `${src} is not an image (it looks like a web page).`);
   return new ImageError(`${src} is not a JPG, PNG, WebP or GIF image.`);
 }
 

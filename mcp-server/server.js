@@ -167,6 +167,7 @@ function makeServer() {
 }
 
 const app = express();
+app.set('trust proxy', true);   // behind the host's proxy: links made by /api/upload use https
 app.use(express.json({ limit: '30mb' }));
 app.get(['/', '/index.html'], (_req, res) => res.sendFile(STUDIO));
 app.get(['/privacy', '/privacy.html'], (_req, res) => res.sendFile(path.join(here, 'privacy.html')));   // linked from the Google sign-in screen

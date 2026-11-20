@@ -694,6 +694,7 @@ function invTitle(n) {
 }
 function invCase(n) {
   n = invStr(n, '');
+  if (/^(to be announced|tba)$/i.test(n)) return 'To be announced';
   if (!n || n.toUpperCase() === n.toLowerCase()) return n;
   if (n === n.toUpperCase() || n === n.toLowerCase()) return invTitle(n);
   var odd = n.split(/\s+/).some(function (w) { return /[a-z\u00df-\u00ff][A-Z\u00c0-\u00de]/.test(w) && w !== w.toUpperCase() && !/^(Mc|Mac|O')/.test(w); });

@@ -71,6 +71,7 @@ test('odd casing is tidied, normal mixed case is kept', () => {
   assert.equal(invCase('Sis. Dolly & Bro. Jonah'), 'Sis. Dolly & Bro. Jonah');
   assert.equal(invCase('Pastor McDonald'), 'Pastor McDonald');
   assert.match(buildInvite({ heading: 'Prayer meetinG' }), /Women's Prayer Meeting/);
+  assert.equal(invCase('TO BE ANNOUNCED'), 'To be announced');
 });
 test('Telugu names pass through the invite unchanged', () => {
   assert.match(buildInvite({ left: { name: 'సిస్టర్ రూతు' } }), /Word: సిస్టర్ రూతు/);
