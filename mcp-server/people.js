@@ -9,12 +9,13 @@ const DATA = process.env.DATA_DIR || path.join(path.dirname(new URL(import.meta.
 const PHOTOS = path.join(DATA, 'photos');
 const META = path.join(DATA, 'people.json');
 const EXT = /\.(jpe?g|png|webp|gif)$/i;
-const TITLES = /\b(pastor|pr|ps|sis|sister|bro|brother|dr|mrs|mr|ms|rev|evangelist|prophetess|and|family|amp)\b/g;
+const TITLES = new Set(['pastor','pr','ps','sis','sister','bro','brother','dr','mrs','mr','ms','rev','evangelist','prophetess','and','family','amp']);
 
 fs.mkdirSync(PHOTOS, { recursive: true });
-const norm = (s) => String(s || '').toLowerCase().replace(/[_\-.]+/g, ' ').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
-const core = (s) => norm(s).replace(TITLES, ' ').replace(/\s+/g, ' ').trim();
-const slug = (s) => norm(s).replace(/ /g, '-').slice(0, 60) || 'person';
+// Names in any script: Telugu, accented Latin, ... ("Sis. Ruth" and "sis ruth" are the same).
+export const norm = (s) => String(s || '').normalize('NFC').toLowerCase().replace(/[_\-.]+/g, ' ').replace(/[^\p{L}\p{M}\p{N} ]/gu, ' ').replace(/\s+/g, ' ').trim();
+export const core = (s) => norm(s).split(' ').filter((t) => t && !TITLES.has(t)).join(' ');
+export const slug = (s) => (norm(s).replace(/ /g, '-').slice(0, 60).replace(/-+$/, '') || 'person');
 const cache = new Map();
 
 function readMeta() { try { return JSON.parse(fs.readFileSync(META, 'utf8')); } catch { return {}; } }
@@ -65,16 +66,36 @@ export async function find(name) {
 }
 
 export async function add({ name, aliases = [], place = '', dataUrl }) {
+  name = String(name || '').trim().slice(0, 60);
   if (!name) throw new Error('A name is required.');
   const small = await shrinkImage(dataUrl, 1000);
-  const key = slug(name);
+  const meta = readMeta(), files = new Set(fs.readdirSync(PHOTOS).filter((f) => EXT.test(f)).map((f) => f.replace(EXT, '')));
+  // the same person again (same name) keeps their file; someone else whose name makes the same
+  // file name gets "-2", "-3" ...
+  const base = slug(name);
+  let key = base, n = 1;
+  while ((files.has(key) || meta[key]) && norm((meta[key] && meta[key].name) || key.replace(/[_-]+/g, ' ')) !== norm(name)) key = `${base}-${++n}`;
+  for (const f of fs.readdirSync(PHOTOS)) if (EXT.test(f) && f.replace(EXT, '') === key && f !== key + '.jpg') fs.unlinkSync(path.join(PHOTOS, f));
   fs.writeFileSync(path.join(PHOTOS, key + '.jpg'), Buffer.from(small.split(',')[1], 'base64'));
-  const meta = readMeta(); meta[key] = { name, aliases, place }; writeMeta(meta);
+  meta[key] = { name, aliases, place }; writeMeta(meta);
+  for (const k of [...cache.keys()]) if (k.startsWith(path.join(PHOTOS, key + '.'))) cache.delete(k);
   return { key, name };
 }
 
+// Only an exact name or alias (ignoring capitals, dots and spaces) removes someone; anything
+// looser lists the people it could mean instead of guessing.
+export function exactMatches(name) {
+  const want = norm(name); if (!want) return [];
+  return list().filter((p) => [p.name, ...p.aliases, p.key].some((n) => norm(n) === want));
+}
 export function remove(name) {
-  const hits = search(name); if (!hits.length) throw new Error(`No one named "${name}".`);
-  const p = hits[0].p; fs.unlinkSync(path.join(PHOTOS, p.file));
+  const hits = exactMatches(name);
+  if (hits.length !== 1) {
+    const near = hits.length ? hits : search(name).slice(0, 6).map((h) => h.p);
+    throw new Error(hits.length > 1
+      ? `"${name}" is the name of several people: ${near.map((p) => p.name).join(', ')}. Nothing was removed.`
+      : `No one is named exactly "${name}"; nothing was removed.${near.length ? ' Did you mean: ' + near.map((p) => p.name).join(', ') + '? Use the full name as listed.' : ''}`);
+  }
+  const p = hits[0]; fs.unlinkSync(path.join(PHOTOS, p.file));
   const meta = readMeta(); delete meta[p.key]; writeMeta(meta); return p.name;
 }
