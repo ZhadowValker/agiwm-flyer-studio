@@ -1,4 +1,5 @@
-// Starts the server and calls make_flyer over MCP HTTP. Set FLYER_HTML / CHROMIUM_PATH if needed.
+// End-to-end smoke test: starts the server and calls make_flyer over MCP HTTP (needs a working Chromium).
+// Run: node smoke.mjs   (set FLYER_HTML / CHROMIUM_PATH if needed)
 import { spawn } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
