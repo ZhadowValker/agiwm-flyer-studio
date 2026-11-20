@@ -1,0 +1,127 @@
+{
+ "showLogo": true,
+ "title": "AGIWM",
+ "sub": "AMAZING GOD INTERNATIONAL WOMEN’S MINISTRIES",
+ "loc": "MARYLAND USA",
+ "script": "Women’s",
+ "heart": false,
+ "heading": "Prayer meetinG",
+ "tags": [
+  "Pray",
+  "Be Encouraged",
+  "Grow Together"
+ ],
+ "left": {
+  "show": true,
+  "photo": "",
+  "z": 1.06,
+  "x": 0,
+  "y": 2.5,
+  "label": "Word by",
+  "name": "EVANGELIST SIS. SAMPLE SPEAKER",
+  "place": ""
+ },
+ "right": {
+  "show": true,
+  "photo": "",
+  "z": 1.23,
+  "x": -2,
+  "y": -11,
+  "label": "Worship by",
+  "name": "SAMPLE WORSHIP FAMILY",
+  "place": ""
+ },
+ "d1": {
+  "show": true,
+  "flag": "in",
+  "date": "2026-11-21",
+  "time": "6:30 AM IST"
+ },
+ "d2": {
+  "show": true,
+  "flag": "us",
+  "date": "2026-11-20",
+  "time": "8:00 PM EST"
+ },
+ "bg": {
+  "img": "",
+  "lighten": 0.57,
+  "glow": 1,
+  "base": "#e9a9fe",
+  "grad": true,
+  "g1": "#f3f8ff",
+  "g2": "#a9c8ee",
+  "ang": 136
+ },
+ "col": {
+  "maroon": "#5a1f6b",
+  "gold": "#b8862b",
+  "ink": "#ffffff",
+  "accent2": "#7d3a8c",
+  "accentGrad": true
+ },
+ "fonts": {
+  "script": "Playfair Display",
+  "heading": "Noto Sans Telugu",
+  "left": "Montserrat",
+  "right": "Montserrat"
+ },
+ "sty": {
+  "ttl": {
+   "col": "#3b0a45"
+  },
+  "sub": {
+   "col": "#2a0833",
+   "wt": "600"
+  },
+  "loc": {
+   "col": "#2a0833",
+   "wt": "600"
+  },
+  "scr": {
+   "col": "#3b0a45",
+   "sz": 0.95,
+   "ls": 2,
+   "font": "Cinzel"
+  },
+  "hd": {
+   "col": "#3b0a45",
+   "sz": 0.95,
+   "ls": 0.5,
+   "dy": -18,
+   "font": "Poppins"
+  },
+  "lbL": {
+   "col": "#ffffff",
+   "op": 0.92,
+   "sz": 0.75,
+   "ls": 0.5,
+   "dy": -9,
+   "font": "Pacifico",
+   "wt": "400"
+  },
+  "nmL": {
+   "col": "#ffffff"
+  },
+  "lbR": {
+   "col": "#ffffff",
+   "op": 0.92,
+   "sz": 0.75,
+   "dy": -9,
+   "font": "Pacifico"
+  },
+  "nmR": {
+   "col": "#ffffff"
+  },
+  "plR": {
+   "wt": "800"
+  },
+  "logo": {
+   "op": 1,
+   "sz": 0.9,
+   "dx": 115,
+   "dy": -10,
+   "rot": 0
+  }
+ }
+}

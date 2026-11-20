@@ -1,5 +1,5 @@
 // Unit tests (no browser needed): node test.js   (npm test)
-// The end-to-end render test is smoke.mjs; the studio browser tests are studio-test.mjs.
+// The end-to-end render test is smoke.mjs; browser tests for the studio are in browser-tests/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
