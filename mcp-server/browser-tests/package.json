@@ -1,0 +1,24 @@
+{
+  "name": "agiwm-flyer-browser-tests",
+  "private": true,
+  "type": "module",
+  "description": "Headless-browser tests for the studio. Needs a Chrome/Chromium: set CHROME_PATH.",
+  "scripts": {
+    "test": "node run-all.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/cinzel": "^5.0.0",
+    "@fontsource/great-vibes": "^5.0.0",
+    "@fontsource/montserrat": "^5.0.0",
+    "@fontsource/noto-sans-telugu": "^5.0.0",
+    "@fontsource/noto-serif-telugu": "^5.0.0",
+    "@fontsource/oswald": "^5.0.0",
+    "@fontsource/pacifico": "^5.0.0",
+    "@fontsource/playfair-display": "^5.0.0",
+    "@fontsource/poppins": "^5.0.0",
+    "@fontsource/schibsted-grotesk": "^5.0.0",
+    "html2canvas": "1.4.1",
+    "playwright-core": "^1.48.0",
+    "pngjs": "^7.0.0"
+  }
+}

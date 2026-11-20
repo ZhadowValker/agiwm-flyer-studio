@@ -3,6 +3,9 @@ import { z } from 'zod';
 const STYLE_LAYERS = ['ttl','sub','loc','scr','hd','tags','tg0','tg1','tg2','lbL','nmL','plL','lbR','nmR','plR','d1dt','d1wd','d1tm','d2dt','d2wd','d2tm','zl','zid','zpw','yl','yh','jt','logo','left','right','d1','d2','zoom','yt','btn'];
 import * as people from './people.js';
 import { shrinkImage } from './renderer.js';
+import { fetchImage } from './images.js';
+import { tzFixFlyer, tzRoles } from './tz.js';
+import { INVITE_DEFAULTS } from './invite.js';
 
 export const FONTS = ['Montserrat','Poppins','Oswald','Bebas Neue','Anton','Playfair Display','Cinzel','Cormorant Garamond','Lora','Great Vibes','Allura','Dancing Script','Pacifico','Noto Sans Telugu','Noto Serif Telugu'];
 export const FLAGS = ['none','in','us','uk','ca'];
@@ -11,17 +14,20 @@ export const ACCENTS = { maroon:['#7d1226','#a63348'], royal:['#2a3a8c','#5b7be0
 
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'use a #RRGGBB colour');
 const font = z.enum(FONTS).optional();
-const photo = z.string().describe('https URL or data:image URL of the photo').optional();
+const photo = z.string().max(14000000).describe('https link to a JPG/PNG/WebP/GIF, a Google Drive share link (the file must be shared as "Anyone with the link"), a data:image URL, or an upload link from POST /api/upload (send the image bytes with the live key; the answer has a short-lived "url" to paste here)').optional();
 
 const person = z.object({
   show: z.boolean().optional(), label: z.string().max(60).optional().describe('small script label, e.g. "Word by"'),
   person: z.string().max(80).optional().describe('someone in the photo library (e.g. "Pastor Elizabeth Amara"): fills their photo, and their name if you give none'),
-  name: z.string().max(60).optional(), place: z.string().max(60).optional().describe('second line, e.g. "Hyderabad, India."'),
-  photo_url: photo, zoom: z.number().min(1).max(4).optional(), offset_x: z.number().min(-100).max(100).optional(), offset_y: z.number().min(-100).max(100).optional(), font,
+  name: z.string().max(60).optional().describe('up to 60 characters; long names wrap onto two lines'), place: z.string().max(60).optional().describe('second line, e.g. "Hyderabad, India." Giving a new name without a place clears the old place.'),
+  photo_url: photo, zoom: z.number().min(1).max(4).optional(),
+  offset_x: z.number().min(-100).max(100).optional().describe('move the photo left/right in % of the card; with fit "cover" it is limited to (zoom-1)*50 so the photo always fills the card'),
+  offset_y: z.number().min(-100).max(100).optional().describe('move the photo up/down in % of the card; same limit as offset_x'),
+  fit: z.enum(['cover', 'contain']).optional().describe('"cover" (default) fills the card, cropping the photo; "contain" shows the whole photo with a blurred copy filling the empty space'), font,
 }).optional();
 const dateBox = z.object({
   show: z.boolean().optional(), flag: z.enum(FLAGS).optional(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('YYYY-MM-DD; weekday and 24th style are automatic'),
-  time: z.string().max(30).optional().describe('e.g. "6:30 AM IST" or "9:00 PM EST". US zones follow daylight saving: EDT from the 2nd Sunday of March to the 1st Sunday of November (ends 1 Nov 2026, starts 14 Mar 2027), otherwise EST; IST is 9.5h ahead of EDT, 10.5h ahead of EST. The label is corrected to match the date.'), font,
+  time: z.string().max(30).optional().describe('e.g. "6:30 AM IST" or "8:00 PM EST". US zones follow daylight saving: EDT from the 2nd Sunday of March to the 1st Sunday of November, otherwise EST; IST is 9.5h ahead of EDT, 10.5h ahead of EST. When you change only the India box, the US box is worked out from it (date and time). A US time whose EDT/EST name does not fit its date keeps its moment and gets the right name (9:00 PM EDT on 20 Nov 2026 becomes 8:00 PM EST).'), font,
 }).optional();
 
 export const flyerShape = {
@@ -62,30 +68,53 @@ const clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !=
 
 async function toDataUrl(src) {
   if (!src) return '';
-  if (src.startsWith('data:image/')) return src;
-  if (!/^https:\/\//i.test(src)) throw new Error('Photos must be https URLs or data:image URLs.');
-  const r = await fetch(src, { signal: AbortSignal.timeout(20000) });
-  if (!r.ok) throw new Error(`Could not download ${src} (${r.status}).`);
-  const type = (r.headers.get('content-type') || '').split(';')[0];
-  if (!/^image\/(png|jpeg|webp|gif)$/.test(type)) throw new Error(`${src} is not a PNG, JPG, WebP or GIF image.`);
-  const buf = Buffer.from(await r.arrayBuffer());
-  if (buf.length > 8 * 1024 * 1024) throw new Error('Photo is over 8 MB.');
-  const raw = `data:${type};base64,${buf.toString('base64')}`;
-  return buf.length > 350 * 1024 ? await shrinkImage(raw, 1000) : raw;
+  const raw = await fetchImage(src);
+  return raw.length > 470 * 1024 ? await shrinkImage(raw, 1000) : raw;
 }
 
-export async function buildFlyer(a) {
+// The photo always covers its card with fit "cover": it can move at most (zoom-1)*50 % each way.
+export function maxOffset(p) { return p && p.fit === 'contain' ? 50 : Math.max(0, ((+p?.z || 1) - 1) * 50); }
+export function clampFraming(p) {
+  if (!p || typeof p !== 'object') return p;
+  const m = maxOffset(p), c = (v) => Math.round(Math.max(-m, Math.min(m, +v || 0)) * 10) / 10;
+  if (p.x !== undefined) p.x = c(p.x);
+  if (p.y !== undefined) p.y = c(p.y);
+  return p;
+}
+
+const warnings = new WeakMap();
+export const warningsOf = (f) => warnings.get(f) || [];
+
+// After a change (`partial`) has been merged into `full`: make the two date boxes agree (the US box
+// follows the India box when only the India box changed) and keep photo framing inside the card.
+// Defaults are filled in only for boxes that end up changed. Returns warnings.
+export function settle(full, partial = {}) {
+  const f = { d1: { ...INVITE_DEFAULTS.d1, ...(full.d1 || {}) }, d2: { ...INVITE_DEFAULTS.d2, ...(full.d2 || {}) } };
+  const r = tzRoles(f), touched = (k) => !!(k && partial[k] && (partial[k].date !== undefined || partial[k].time !== undefined));
+  const warn = tzFixFlyer(f, { anchor: touched(r.ist) && !touched(r.us) ? 'ist' : '' });
+  for (const k of ['d1', 'd2']) {
+    const before = { ...INVITE_DEFAULTS[k], ...(full[k] || {}) };
+    if (before.date !== f[k].date || before.time !== f[k].time) full[k] = { ...(full[k] || {}), date: f[k].date, time: f[k].time };
+  }
+  for (const k of ['left', 'right']) if (full[k]) clampFraming(full[k]);
+  return warn;
+}
+
+// a: tool input. opt.fresh: a one-off flyer (make_flyer / schedules), so speakers that are not
+// given show "To be announced" instead of the template's sample names.
+export async function buildFlyer(a, opt = {}) {
   const f = {};
   Object.assign(f, clean({ title: a.title, sub: a.subtitle, loc: a.location, script: a.script_word, heading: a.heading }));
   if (a.tags) f.tags = [0, 1, 2].map((i) => a.tags[i] ?? ['Pray', 'Be Encouraged', 'Grow Together'][i]);
   for (const [key, src] of [['left', a.left_speaker], ['right', a.right_speaker]]) {
     if (!src) continue;
-    const o = clean({ show: src.show, label: src.label, name: src.name, place: src.place, z: src.zoom, x: src.offset_x, y: src.offset_y });
+    const o = clean({ show: src.show, label: src.label, name: src.name, place: src.place, z: src.zoom, x: src.offset_x, y: src.offset_y, fit: src.fit });
+    if (src.name !== undefined && src.place === undefined && !src.person) o.place = '';
     if (src.person) {
       const p = await people.find(src.person);
       o.photo = p.dataUrl; o.z = o.z ?? 1; o.x = o.x ?? 0; o.y = o.y ?? 0;
       if (src.name === undefined) o.name = p.name.toUpperCase();
-      if (src.place === undefined && p.place) o.place = p.place;
+      if (src.place === undefined) o.place = p.place || '';
     }
     if (src.photo_url !== undefined) o.photo = await toDataUrl(src.photo_url);
     f[key] = o;
@@ -126,9 +155,37 @@ export async function buildFlyer(a) {
     }
     if (Object.keys(sty).length) f.sty = sty;
   }
+  if (opt.fresh) {
+    for (const k of ['left', 'right']) if (!f[k] || (f[k].name === undefined && !(k === 'left' ? a.left_speaker : a.right_speaker)?.person)) f[k] = { place: '', ...(f[k] || {}), name: TBA_NAME };
+  }
   // The page's own sanitiser fills every missing field from the AGIWM defaults.
   if (f.d1) delete f.d1.font; if (f.d2) delete f.d2.font;
   for (const k of ['left', 'right']) if (f[k]) delete f[k].font;
+  // One-off flyers are complete now, so their dates can be settled here; changes to the live flyer
+  // are settled by live.patch after merging.
+  if (opt.fresh) warnings.set(f, settle(f, f));
+  return f;
+}
+export const TBA_NAME = 'TO BE ANNOUNCED';
+
+// Default text / object styles, as the studio has them (used to trim get_flyer's answer).
+const TEXT_STY = { col: '', op: 1, sz: 1, ls: 0, dx: 0, dy: 0, rot: 0, vis: true, font: '', cs: '', wt: '', tx: '' };
+const OBJ_STY = { op: 1, sz: 1, dx: 0, dy: 0, rot: 0 };
+const OBJ_LAYERS = new Set(['logo', 'left', 'right', 'd1', 'd2', 'zoom', 'yt', 'btn']);
+// A copy for showing to Claude: photos as "(set)", and styles / fonts that are just the defaults left out.
+export function trimForDisplay(flyer) {
+  const f = JSON.parse(JSON.stringify(flyer || {}));
+  for (const [p, k] of [['left', 'photo'], ['right', 'photo'], ['bg', 'img']]) if (f[p] && f[p][k]) f[p][k] = '(set)';
+  delete f.logo; delete f.id;
+  if (f.sty) {
+    for (const [k, v] of Object.entries(f.sty)) {
+      const d = OBJ_LAYERS.has(k) ? OBJ_STY : TEXT_STY;
+      for (const [kk, vv] of Object.entries(v || {})) if (d[kk] === vv) delete v[kk];
+      if (!v || !Object.keys(v).length) delete f.sty[k];
+    }
+    if (!Object.keys(f.sty).length) delete f.sty;
+  }
+  if (f.fonts) { for (const k of Object.keys(f.fonts)) if (!f.fonts[k]) delete f.fonts[k]; if (!Object.keys(f.fonts).length) delete f.fonts; }
   return f;
 }
 

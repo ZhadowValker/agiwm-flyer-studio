@@ -1,6 +1,8 @@
 // Builds the WhatsApp invitation text from a flyer state, so the text and the image always match.
 // One source for two users: the connector imports it, and the studio build inlines it
-// (the "export" line at the bottom is stripped there). Keep this file ASCII only.
+// (lines starting with "export" or "import" are stripped there; run sync-studio.mjs after editing).
+// Keep this file ASCII only.
+import { tzFixFlyer } from './tz.js';
 
 var INVITE_DEFAULTS = {
   title: 'AGIWM', script: 'Women\u2019s', heading: 'Prayer Meeting',
@@ -23,11 +25,18 @@ function invSec(s, k) {
 function invStr(v, dflt) { return (v === undefined || v === null ? dflt : String(v)).replace(/\u2019/g, "'").replace(/\s+/g, ' ').trim(); }
 // Text typed all in capitals (or all in small letters) on the flyer reads badly in a chat, so
 // "DR MANJULA CHARAN" and "prayer meeting" become "Dr Manjula Charan" and "Prayer Meeting".
+// Odd mixed casing such as "Prayer meetinG" (a capital after small letters inside a word) is
+// tidied the same way. Ordinary mixed case ("Sis. Dolly & Bro. Jonah") is left as typed.
+function invTitle(n) {
+  return n.toLowerCase().replace(/(^|[\s\-(/&.])([a-z\u00c0-\u024f])/g, function (m, a, b) { return a + b.toUpperCase(); });
+}
 function invCase(n) {
   n = invStr(n, '');
-  if (n && n.toUpperCase() !== n.toLowerCase() && (n === n.toUpperCase() || n === n.toLowerCase()))
-    n = n.toLowerCase().replace(/(^|[\s\-(])([a-z\u00c0-\u024f])/g, function (m, a, b) { return a + b.toUpperCase(); });
-  return n;
+  if (/^(to be announced|tba)$/i.test(n)) return 'To be announced';
+  if (!n || n.toUpperCase() === n.toLowerCase()) return n;
+  if (n === n.toUpperCase() || n === n.toLowerCase()) return invTitle(n);
+  var odd = n.split(/\s+/).some(function (w) { return /[a-z\u00df-\u00ff][A-Z\u00c0-\u00de]/.test(w) && w !== w.toUpperCase() && !/^(Mc|Mac|O')/.test(w); });
+  return odd ? invTitle(n) : n;
 }
 var invName = invCase;
 function invDate(iso) {
@@ -39,6 +48,14 @@ function invGroup(d) {
   if (d.length === 11) return d.replace(/(\d{3})(\d{4})(\d{4})/, '$1 $2 $3');
   if (d.length === 9) return d.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
   return d;
+}
+
+// The two date boxes as the flyer shows them (defaults filled in; a US time whose EDT/EST name does
+// not fit its date is corrected the same way the studio and the server correct it).
+function invDates(s) {
+  var f = { d1: invSec(s, 'd1'), d2: invSec(s, 'd2') };
+  tzFixFlyer(f);
+  return f;
 }
 
 // s: a flyer state (full or partial; anything missing falls back to the AGIWM defaults).
@@ -58,9 +75,9 @@ function buildInvite(s, opt) {
   });
   if (sp.length) blocks.push(sp.join('\n'));
 
-  var ds = [];
+  var ds = [], dates = invDates(s);
   ['d1', 'd2'].forEach(function (k) {
-    var c = invSec(s, k);
+    var c = dates[k];
     if (c.show === false) return;
     var when = [invDate(c.date), invStr(c.time, '')].filter(Boolean).join(', ');
     if (when) ds.push((INV_FLAG[c.flag] || '\u{1F5D3}\ufe0f') + ' ' + when);
@@ -91,4 +108,4 @@ function buildInvite(s, opt) {
   return blocks.join('\n\n');
 }
 
-export { buildInvite, INVITE_DEFAULTS };
+export { buildInvite, invCase, invDates, INVITE_DEFAULTS };
