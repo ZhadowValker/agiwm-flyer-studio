@@ -1,4 +1,6 @@
+<meta charset="utf-8">
 <title>AGIWM Flyer Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,6 +80,8 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .tw .tact button{width:22px;height:22px;display:grid;place-items:center;padding:0;border:0;border-radius:6px;cursor:pointer;color:#fff;background:rgba(15,15,14,.6)}
 .tw .tact button:hover{background:rgba(15,15,14,.9)} .tw .tact button.danger:hover{background:rgba(229,72,77,.92)}
 .tw .tact svg.i{width:14px;height:14px}
+.tw .tact button.mklive{width:auto;padding:0 7px;font-size:10.5px;font-weight:700}
+.tw .tlive{position:absolute;left:5px;top:5px;padding:2px 6px;font-size:10px;font-weight:800;letter-spacing:.06em;color:#fff;background:#e5484d;border-radius:5px;pointer-events:none}
 @media (hover:none){.tw .tact{opacity:1}}
 
 /* popup menus */
@@ -123,6 +127,8 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 
 .toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#f4f2ee;color:#17161a;padding:10px 16px;border-radius:10px;font-weight:600;font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:80;max-width:calc(100vw - 32px)}
 .toast.on{opacity:1}
+.toast.on .tbtn{pointer-events:auto}.toast .tbtn{margin-left:12px;border:1px solid #17161a;background:transparent;color:#17161a;border-radius:7px;padding:3px 10px;font:inherit;font-weight:700;cursor:pointer}
+.tzw{display:flex;flex-wrap:wrap;gap:6px;align-items:center;color:#ffb35c}.tzw .btn{font-size:12.5px;padding:4px 10px}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
 .ov img{max-width:100%;max-height:78vh;border-radius:8px;background:#fff}
 .ov p{color:#fff;margin:0;text-align:center}
@@ -209,6 +215,20 @@ dialog.aid .acts .btn{color:var(--ui-text)} dialog.aid .acts .btn.primary{color:
 }
 
 
+/* phones: everything in the top bar stays on screen (download included), the tool rail fits */
+#uiStyle{white-space:nowrap}
+@media (max-width:480px){
+  .top{gap:4px;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+  .title-in{width:auto;flex:1 1 60px;min-width:48px;max-width:120px;padding:6px 6px}
+  .top .ico{width:32px;flex:none}
+  #redo{display:none}
+  #uiStyle{padding:6px 9px;font-size:12px;flex:none} #uiStyle .lp{display:none}
+  #liveBtn{padding:8px;flex:none} #liveBtn span{display:none}
+  #dlBtn{padding:7px 10px;flex:none}
+  #rail{gap:0;padding:4px 6px} #rail .ico{width:34px;height:34px} #rail .rsp{margin:0 2px}
+  .tw .tact button.mklive{font-size:10px}
+}
+
 /* Photoshop layout: toolbox far left, canvas centre, layers + options right */
 #layers{display:none}
 @media (min-width:761px){
@@ -252,7 +272,7 @@ html.fd #pill{display:flex;position:fixed;left:50%;transform:translateX(-50%);bo
   html.fd #canvasWrap{padding-bottom:96px}
 }
 /* ---------- The flyer (fixed 2000 x 1125 canvas) ---------- */
-#stage{position:absolute;left:0;top:0;width:2000px;height:1125px;overflow:hidden;transform-origin:0 0;font-family:Montserrat,'Segoe UI',Arial,sans-serif;color:#1c1415;
+#stage{position:absolute;left:0;top:0;width:2000px;height:1125px;overflow:hidden;transform-origin:0 0;font-family:Montserrat,'Noto Sans Telugu','Segoe UI',Arial,sans-serif;color:#1c1415;
   --maroon:#7d1226;--maroon2:#96243b;--gold:#c9a15a;--ink:#1c1415}
 #stage *{box-sizing:border-box}
 #stage .abs{position:absolute}
@@ -271,24 +291,25 @@ html.fd #pill{display:flex;position:fixed;left:50%;transform:translateX(-50%);bo
 .locrow{display:flex;align-items:center;gap:26px}
 .locrow i{display:block;width:262px;height:2px;background:var(--gold)}
 #loc{font-weight:600;color:#3a2c2e;letter-spacing:.42em;line-height:1;padding-left:.42em;display:inline-block}
-#scr{font-family:'Great Vibes','Brush Script MT',cursive;color:var(--maroon);line-height:1.1;display:inline-block;padding:0 .06em}
+#scr{font-family:'Great Vibes','Brush Script MT','Noto Serif Telugu',cursive;color:var(--maroon);line-height:1.1;display:inline-block;padding:0 .06em}
 #scr .ht{display:inline-block;width:.2em;height:.2em;margin:0 .03em;vertical-align:top;position:relative;top:.2em}
 #scr .ht svg{display:block;width:100%;height:100%}
-#hd{font-family:'Playfair Display',Georgia,serif;font-weight:900;color:#1b1214;line-height:1;letter-spacing:.01em;display:inline-block}
+#hd{font-family:'Playfair Display',Georgia,'Noto Serif Telugu',serif;font-weight:900;color:#1b1214;line-height:1;letter-spacing:.01em;display:inline-block}
 #hd .w{display:inline-block;margin:0 .1em}
-#hd .c1{font-size:1em}#hd .c2{font-size:.78em}
+#hd .c1{font-size:1em}#hd .c2{font-size:.78em}#hd .c2.nl{font-size:.8em;line-height:1.05}
 .tagrow{display:flex;align-items:center;font-weight:500;letter-spacing:.12em;color:#3c2f31;line-height:1;white-space:nowrap}
 .tagrow i{display:block;width:2px;height:1.05em;background:var(--gold);margin:0 1.3em}
 .card{position:absolute;border-radius:30px;overflow:hidden;border:4px solid var(--gold);background:#d9b99a;box-shadow:0 10px 26px rgba(90,40,30,.28)}
 .phw{position:absolute;inset:0;overflow:hidden;cursor:grab}
 .phw.drag{cursor:grabbing}
-.ph{position:absolute;inset:0;background:center/cover no-repeat;transform-origin:50% 50%}
+.ph{position:absolute;inset:0;background:50% 25%/cover no-repeat;transform-origin:50% 50%}
+.phb{position:absolute;inset:0;background:center/cover no-repeat}
 .phe{position:absolute;inset:0;background:linear-gradient(180deg,#e7c9a8,#caa07a);display:flex;align-items:flex-start;justify-content:center;padding-top:80px}
 .phe svg{width:62%}
 .plate{position:absolute;left:0;right:0;bottom:0;padding:14px 18px 16px;text-align:center;background:linear-gradient(180deg,var(--maroon2),var(--maroon));color:#fff;display:flex;flex-direction:column;align-items:center;gap:2px}
-.plate .lb{font-family:'Great Vibes',cursive;font-size:38px;line-height:1;color:#f6e3c4;letter-spacing:.02em}
-.plate .nm{font-weight:800;font-size:35px;line-height:1.12;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;display:inline-block}
-.plate .pl{font-weight:600;font-size:33px;line-height:1.1;white-space:nowrap;display:inline-block}
+.plate .lb{font-family:'Great Vibes','Noto Serif Telugu',cursive;font-size:38px;line-height:1;color:#f6e3c4;letter-spacing:.02em}
+.plate .nm{font-weight:800;font-size:35px;line-height:1.12;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;display:inline-block;overflow-wrap:anywhere}
+.plate .pl{font-weight:600;font-size:33px;line-height:1.1;white-space:nowrap;display:inline-block;overflow-wrap:anywhere}
 .chip2{top:62px!important}
 .chip{position:absolute;top:12px;right:12px;border:0;border-radius:999px;background:rgba(0,0,0,.62);color:#fff;font:600 24px/1 Figtree,sans-serif;padding:10px 18px;cursor:pointer}
 .dcard{position:absolute;top:632px;width:410px;height:318px;border-radius:28px;background:#fffaf5;border:3px solid #ecdcd2;display:flex;flex-direction:column;align-items:center;padding-top:16px}
@@ -337,12 +358,12 @@ html.fd #pill{display:flex;position:fixed;left:50%;transform:translateX(-50%);bo
         <div class="ctr" style="left:480px;top:572px;width:1040px;height:44px"><div class="tagrow" id="tags"></div></div>
 
         <div class="card" id="cardL" data-t="left" style="left:30px;top:305px;width:516px;height:653px">
-          <div class="phw"><div class="phe"><svg viewBox="0 0 100 110" aria-hidden="true"><circle cx="50" cy="34" r="22" fill="#f6e6d2"/><path d="M6 110c0-28 20-44 44-44s44 16 44 44z" fill="#f6e6d2"/></svg></div><div class="ph"></div></div>
+          <div class="phw"><div class="phe"><svg viewBox="0 0 100 110" aria-hidden="true"><circle cx="50" cy="34" r="22" fill="#f6e6d2"/><path d="M6 110c0-28 20-44 44-44s44 16 44 44z" fill="#f6e6d2"/></svg></div><div class="phb"></div><div class="ph"></div></div>
           <div class="plate"><div class="lb"></div><div class="nm"></div><div class="pl"></div></div>
           <button class="chip ui-only" type="button" data-pick="left.photo">Replace photo</button><button class="chip chip2 ui-only" type="button" data-drive="left.photo">From Drive</button>
         </div>
         <div class="card" id="cardR" data-t="right" style="left:1445px;top:305px;width:522px;height:653px">
-          <div class="phw"><div class="phe"><svg viewBox="0 0 100 110" aria-hidden="true"><circle cx="50" cy="34" r="22" fill="#f6e6d2"/><path d="M6 110c0-28 20-44 44-44s44 16 44 44z" fill="#f6e6d2"/></svg></div><div class="ph"></div></div>
+          <div class="phw"><div class="phe"><svg viewBox="0 0 100 110" aria-hidden="true"><circle cx="50" cy="34" r="22" fill="#f6e6d2"/><path d="M6 110c0-28 20-44 44-44s44 16 44 44z" fill="#f6e6d2"/></svg></div><div class="phb"></div><div class="ph"></div></div>
           <div class="plate"><div class="lb"></div><div class="nm"></div><div class="pl"></div></div>
           <button class="chip ui-only" type="button" data-pick="right.photo">Replace photo</button><button class="chip chip2 ui-only" type="button" data-drive="right.photo">From Drive</button>
         </div>
@@ -768,8 +789,8 @@ var DEF={
   logo:LOGO, showLogo:true,
   title:'AGIWM', sub:"AMAZING GOD INTERNATIONAL WOMEN\u2019S MINISTRIES", loc:'MARYLAND USA',
   script:"Women\u2019s", heart:true, heading:'Prayer Meeting', tags:['Pray','Be Encouraged','Grow Together'],
-  left:{show:true,photo:'',z:1,x:0,y:0,label:'Word by',name:'DR MANJULA CHARAN',place:'Hyderabad, India.'},
-  right:{show:true,photo:'',z:1,x:0,y:0,label:'Worship by',name:'SIS SHANTA KUMARI & FAMILY',place:''},
+  left:{show:true,photo:'',z:1,x:0,y:0,fit:'cover',label:'Word by',name:'DR MANJULA CHARAN',place:'Hyderabad, India.'},
+  right:{show:true,photo:'',z:1,x:0,y:0,fit:'cover',label:'Worship by',name:'SIS SHANTA KUMARI & FAMILY',place:''},
   d1:{show:true,flag:'in',date:'2026-10-24',time:'6:30 AM IST'},
   d2:{show:true,flag:'us',date:'2026-10-23',time:'9:00 PM EDT'},
   zoom:{show:true,label:'Join us over Zoom',id:'9969598014',pass:'202022',idLabel:'Meeting ID',passLabel:'Password'},
@@ -834,7 +855,11 @@ var FONTLIST=[
 ];
 var FONTMAP={};FONTLIST.forEach(function(f){FONTMAP[f.n]=f;});
 var FONTOPTS=[['','Original']].concat(FONTLIST.map(function(f){return [f.n,f.n];}));
-function fontCss(n){var f=FONTMAP[n];return f?"'"+n+"',"+f.fb:'';}
+/* Telugu letters are not in the Latin fonts: every stack falls back to Noto Telugu (a web font in the
+   same Google Fonts link), never to the system font, which on the server has no Telugu at all. */
+function teluguFb(fb){return fb==='serif'?"'Noto Serif Telugu',serif":fb==='cursive'?"'Noto Serif Telugu',cursive":"'Noto Sans Telugu',sans-serif";}
+function fontCss(n){var f=FONTMAP[n];if(!f)return '';return /Telugu/.test(n)?"'"+n+"',"+f.fb:"'"+n+"',"+teluguFb(f.fb);}
+var TELUGU=/[\u0C00-\u0C7F]/;
 var fontReq={};
 function needFont(n){
   if(!n||!FONTMAP[n]||fontReq[n]||!document.fonts||!document.fonts.load)return fontReq[n]||Promise.resolve();
@@ -850,6 +875,7 @@ var FLAGOPTS=[['none','No flag'],['in','India'],['us','USA'],['uk','United Kingd
 var PF=function(p){return [
   {k:p+'.show',type:'chk',label:'Show'},
   {k:p+'.photo',type:'img',label:'Upload photo',max:1600,fmt:'auto'},
+  {k:p+'.fit',type:'sel',label:'Photo fit',opts:[['cover','Fill the card'],['contain','Fit whole photo']]},
   {k:p+'.z',type:'rng',label:'Zoom',min:1,max:4,step:0.01},
   {k:p+'.x',type:'rng',label:'Left / right',min:-60,max:60,step:0.5},
   {k:p+'.y',type:'rng',label:'Up / down',min:-60,max:60,step:0.5},
@@ -863,7 +889,7 @@ var DF=function(p){return [
   {k:p+'.time',type:'txt',label:'Time'},{type:'tzwarn'}];};
 var TL=function(k,name,sel,content,ind){return {k:k,name:name,sel:sel,ind:ind||0,f:content.concat([{type:'lyr',layer:k,label:name}])};};
 var TO=function(k,name,sel,fields){return {k:k,name:name,sel:sel,f:fields.concat([{type:'lyr',layer:k,label:name}])};};
-var PHF=function(p){return [{k:p+'.show',type:'chk',label:'Show'},{k:p+'.photo',type:'img',label:'Upload photo',max:1600,fmt:'auto'},{k:p+'.z',type:'rng',label:'Photo zoom',min:1,max:4,step:0.01},{k:p+'.x',type:'rng',label:'Photo left / right',min:-60,max:60,step:0.5},{k:p+'.y',type:'rng',label:'Photo up / down',min:-60,max:60,step:0.5}];};
+var PHF=function(p){return [{k:p+'.show',type:'chk',label:'Show'},{k:p+'.photo',type:'img',label:'Upload photo',max:1600,fmt:'auto'},{k:p+'.fit',type:'sel',label:'Photo fit',opts:[['cover','Fill the card'],['contain','Fit whole photo']]},{k:p+'.z',type:'rng',label:'Photo zoom',min:1,max:4,step:0.01},{k:p+'.x',type:'rng',label:'Photo left / right',min:-60,max:60,step:0.5},{k:p+'.y',type:'rng',label:'Photo up / down',min:-60,max:60,step:0.5}];};
 var TARGETS=[
  {k:'logo',name:'Logo',sel:'#logo',f:[{k:'logo',type:'img',label:'Upload logo',max:600,fmt:'png',noclear:true},{k:'showLogo',type:'chk',label:'Show'},{type:'lyr',layer:'logo',label:'Logo'}]},
  TL('ttl','Main title','#ttl',[{k:'title',type:'txt',label:'Main title'}]),
@@ -960,14 +986,12 @@ var selKey=null,editing=null;
 function bind(){if(deck.i>=deck.flyers.length)deck.i=deck.flyers.length-1;if(deck.i<0)deck.i=0;state=deck.flyers[deck.i];if(typeof PM!=='undefined'&&PM&&PM.db)setTimeout(pmCheck,0);}
 
 var pickInput=document.createElement('input');pickInput.type='file';pickInput.accept='image/*';pickInput.hidden=true;document.body.appendChild(pickInput);
-var pickKey=null,pickCfg=null;
+var pickKey=null,pickCfg=null,pickTarget=null;
 pickInput.addEventListener('change',function(){
   var f=pickInput.files&&pickInput.files[0];pickInput.value='';if(!f||!pickKey)return;
-  var k=pickKey,c=pickCfg,target=state;
-  loadImage(f,c.max,c.fmt==='auto'?(f.type==='image/png'?'png':'jpeg'):c.fmt).then(function(u){
-    setp(target,k,u);if(/\.photo$/.test(k)){var p=k.split('.')[0];target[p].z=1;target[p].x=0;target[p].y=0;}
-    changed();syncAll();
-  }).catch(function(){toast('That file could not be read as an image.');});
+  var k=pickKey,c=pickCfg,target=pickTarget||state;pickTarget=null;
+  loadImageInfo(f,c.max,c.fmt==='auto'?(f.type==='image/png'?'png':'jpeg'):c.fmt).then(function(r){return applyImage(target,k,r);})
+  .catch(function(e){toast((e&&e.message)||'That file could not be read as an image.');});
 });
 function resetPhoto(k){if(/\.photo$/.test(k)){var p=k.split('.')[0];state[p].z=1;state[p].x=0;state[p].y=0;}}
 
@@ -1037,7 +1061,8 @@ function makeField(f,reg,compact,noid){
     var row=compact?w:document.createElement('div');if(!compact){row.className='imgrow';w.appendChild(row);}
     var dv=document.createElement('button');dv.type='button';dv.className=compact?'sbtn':'btn';dv.textContent='From Drive';dv.title='Pick an image from Google Drive';
     row.appendChild(th);row.appendChild(up);row.appendChild(dv);if(!f.noclear)row.appendChild(rm);
-    up.addEventListener('click',function(){pickKey=f.k;pickCfg=f;pickInput.click();});
+    up.addEventListener('click',function(){pickKey=f.k;pickCfg=f;pickTarget=state;pickInput.click();});
+    dv.setAttribute('data-drivebtn','');
     dv.addEventListener('click',function(){drivePick(f.k,f);});
     rm.addEventListener('click',function(){setp(state,f.k,'');resetPhoto(f.k);changed();syncAll();});
     reg.push(function(){var v=getp(state,f.k);th.style.backgroundImage=v?'url("'+v+'")':'none';rm.disabled=!v;});return w;
@@ -1170,7 +1195,7 @@ stage.addEventListener('input',function(e){
   if(!editing||e.target!==editing.el)return;
   var v=editing.el.innerText.replace(/[\r\n]+/g,' ').slice(0,maxLen(editing.key));
   fieldSet(state,editing.key,v);
-  if(editing.fp)fit(editing.el,editing.fp[0],editing.fp[1],editing.fp[2]);
+  if(editing.fp){if(/\.(name|place)$/.test(editing.key))fitWrap(editing.el,editing.fp[0],editing.fp[1],editing.fp[2],2);else fit(editing.el,editing.fp[0],editing.fp[1],editing.fp[2]);}
   changed(true);
 });
 stage.addEventListener('keydown',function(e){
@@ -1208,22 +1233,61 @@ stage.addEventListener('click',function(e){
 $$('#rail [data-sel]').forEach(function(b){b.addEventListener('click',function(){selectTarget(b.getAttribute('data-sel'));});});
 
 /* ---------- images ---------- */
-function loadImage(file,maxDim,fmt){
-  return new Promise(function(res,rej){
-    var fr=new FileReader();
-    fr.onload=function(){var im=new Image();
-      im.onload=function(){
-        var k=Math.min(1,maxDim/Math.max(im.width,im.height)),c=document.createElement('canvas');
-        c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));
-        var g=c.getContext('2d');if(fmt==='jpeg'){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);}
-        g.drawImage(im,0,0,c.width,c.height);res(c.toDataURL(fmt==='jpeg'?'image/jpeg':'image/png',0.9));};
-      im.onerror=rej;im.src=fr.result;};
-    fr.onerror=rej;fr.readAsDataURL(file);
+/* Read a picked file (or a Drive download) into a data URL, with a clear message for the usual problems:
+   empty files, iPhone HEIC photos, damaged files. Resolves {url, w, h} (w/h of the original). */
+var HEIC_MSG='That is an iPhone HEIC photo, which this browser cannot open. Export it as JPG first (iPhone: Share > Save as JPEG, or Settings > Camera > Formats > Most Compatible).';
+function sniffBlob(b){
+  return (b.slice?b.slice(0,32).arrayBuffer():Promise.resolve(new ArrayBuffer(0))).then(function(ab){var u=new Uint8Array(ab),t=String.fromCharCode.apply(null,u);
+    if(u[0]===0xff&&u[1]===0xd8)return 'jpeg';if(t.slice(1,4)==='PNG')return 'png';if(t.slice(0,4)==='GIF8')return 'gif';if(t.slice(0,4)==='RIFF'&&t.slice(8,12)==='WEBP')return 'webp';
+    if(t.slice(4,8)==='ftyp'&&/^(heic|heix|hevc|hevx|heim|heis|mif1|msf1)/.test(t.slice(8,12)))return 'heic';
+    if(/^\s*</.test(t))return 'html';return '';},function(){return '';});
+}
+function loadImageInfo(file,maxDim,fmt){
+  if(!file||!file.size)return Promise.reject(new Error('That file is empty (0 bytes). Pick the photo again; if it is in iCloud or Google Drive, let it download first.'));
+  var heicName=/\.(heic|heif)$/i.test(file.name||'')||/hei[cf]/i.test(file.type||'');
+  return sniffBlob(file).then(function(kind){
+    return new Promise(function(res,rej){
+      var fr=new FileReader();
+      fr.onload=function(){var im=new Image();
+        im.onload=function(){
+          var k=Math.min(1,maxDim/Math.max(im.width,im.height)),c=document.createElement('canvas');
+          c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));
+          var g=c.getContext('2d');if(fmt==='jpeg'){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);}
+          g.drawImage(im,0,0,c.width,c.height);res({url:c.toDataURL(fmt==='jpeg'?'image/jpeg':'image/png',0.9),w:im.width,h:im.height});};
+        im.onerror=function(){rej(new Error(kind==='heic'||heicName?HEIC_MSG:kind==='html'?'That file is a web page, not a picture.':'That file is damaged or is not a picture. Use a JPG, PNG, WebP or GIF photo.'));};
+        im.src=fr.result;};
+      fr.onerror=function(){rej(new Error('That file could not be read. Pick it again.'));};fr.readAsDataURL(file);
+    });
+  });
+}
+function loadImage(file,maxDim,fmt){return loadImageInfo(file,maxDim,fmt).then(function(r){return r.url;});}
+function imgSize(u){return new Promise(function(res){if(!u)return res(null);var im=new Image();im.onload=function(){res({w:im.naturalWidth,h:im.naturalHeight});};im.onerror=function(){res(null);};im.src=u;});}
+/* Put a newly loaded image into a flyer (the one that was showing when the image was chosen, even if
+   another flyer is showing now). A new speaker photo keeps the zoom and position when it has about the
+   same shape as the old one; otherwise they are reset, with Undo. */
+function applyImage(target,k,r,how){
+  var side=/^(left|right)\.photo$/.test(k)?k.split('.')[0]:null,p=side&&target[side];
+  return (p&&p.photo?imgSize(p.photo):Promise.resolve(null)).then(function(od){
+    var msgs=[],act=null;
+    setp(target,k,r.url);
+    if(p){
+      var old={z:p.z,x:p.x,y:p.y},moved=old.z!==1||old.x||old.y;
+      var same=od&&r.w&&Math.abs((r.w/r.h)/(od.w/od.h)-1)<0.12;
+      if(!od){p.z=1;p.x=0;p.y=0;}
+      else if(!same&&moved){p.z=1;p.x=0;p.y=0;msgs.push('The new photo has a different shape, so its zoom and position were reset.');
+        act={label:'Undo',fn:function(){p.z=old.z;p.x=old.x;p.y=old.y;clampPhoto(p);changed();syncAll();}};}
+      clampPhoto(p);
+    }
+    if(r.w&&Math.min(r.w,r.h)<300)msgs.push('This picture is small ('+r.w+' x '+r.h+' px) and may look blurry; a larger photo will print sharper.');
+    var i=deck.flyers.indexOf(target);
+    if(i>=0&&i!==deck.i){var keep=deck.i;deck.i=i;bind();render();takeSnap();updateThumb(i);deck.i=keep;bind();render();msgs.unshift('Image added to flyer '+(i+1)+'.');}
+    changed();syncAll();
+    if(msgs.length||how)toast((how?how+' ':'')+msgs.join(' '),act);
   });
 }
 document.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('[data-pick]');if(!b)return;
-  pickKey=b.getAttribute('data-pick');pickCfg={max:1600,fmt:'auto'};pickInput.click();
+  pickKey=b.getAttribute('data-pick');pickCfg={max:1600,fmt:'auto'};pickTarget=state;pickInput.click();
 });
 document.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('[data-drive]');if(!b)return;
@@ -1247,7 +1311,7 @@ function pmSave(name,place,photo){
   var r={k:k,name:name,place:place||'',photo:photo,at:Date.now()};PM.mem[k]=r;
   try{if(PM.db)PM.db.transaction('people','readwrite').objectStore('people').put(r);}catch(e){}
   var lk=pmLiveKey();
-  if(lk)fetch('/api/people?k='+encodeURIComponent(lk),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,place:place||'',dataUrl:photo})}).catch(function(){});
+  if(lk)fetch('/api/people',{method:'POST',headers:{'Content-Type':'application/json','x-flyer-key':lk},body:JSON.stringify({name:name,place:place||'',dataUrl:photo})}).catch(function(){});
 }
 function pmApply(side,r,prevPhoto){
   var p=state[side];if(!p||pmKey(p.name)!==r.k||p.photo!==prevPhoto)return;
@@ -1272,7 +1336,7 @@ function pmCheck(){
     clearTimeout(PM.busy[side]);
     PM.busy[side]=setTimeout(function(){
       if(pmKey(state[side].name)!==k)return;
-      fetch('/api/people/photo?k='+encodeURIComponent(lk)+'&name='+encodeURIComponent(state[side].name)).then(function(res){return res.ok?res.json():null;}).then(function(d){
+      fetch('/api/people/photo?name='+encodeURIComponent(state[side].name),{headers:{'x-flyer-key':lk}}).then(function(res){return res.ok?res.json():null;}).then(function(d){
         if(!d||!d.dataUrl||pmKey(d.name)!==k&&!(d.aliases||[]).some(function(a){return pmKey(a)===k;}))return;
         var rec={k:k,name:d.name,place:d.place||'',photo:d.dataUrl,at:Date.now()};PM.mem[k]=rec;
         try{if(PM.db)PM.db.transaction('people','readwrite').objectStore('people').put(rec);}catch(e){}
@@ -1286,8 +1350,9 @@ function pmCheck(){
    Project agiwm-flyer-studio (AGIM USA). Scope drive.file: the studio can open only the files picked here.
    The client ID and API key are public by design; the key is limited to the Picker API and this site. */
 var GDRIVE={client:'326831518256-pi57egdfph5227rcrbu76fi9nqq57gne.apps.googleusercontent.com',key:'AIzaSyCw80LdjwOVEmH7p191JKHKlaoDtKraVZQ',app:'326831518256',
-  scope:'https://www.googleapis.com/auth/drive.file',token:null,exp:0,tc:null,ready:null};
-function gdLoad(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=function(){rej(new Error('Could not load '+src));};document.head.appendChild(s);});}
+  scope:'https://www.googleapis.com/auth/drive.file openid email',token:null,exp:0,tc:null,ready:null,email:''};
+try{GDRIVE.email=localStorage.getItem('agiwm-gdrive-email')||'';}catch(e){}
+function gdLoad(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=function(){rej(new Error('Could not load Google Drive (check the connection or an ad blocker).'));};document.head.appendChild(s);});}
 function gdInit(){
   if(GDRIVE.ready)return GDRIVE.ready;
   GDRIVE.ready=Promise.all([gdLoad('https://accounts.google.com/gsi/client'),gdLoad('https://apis.google.com/js/api.js')])
@@ -1295,47 +1360,86 @@ function gdInit(){
     .catch(function(e){GDRIVE.ready=null;throw e;});
   return GDRIVE.ready;
 }
+/* Load Google's scripts before the click (on hover / focus of a From Drive button, and soon after the page
+   opens on the hosted studio), so the sign-in window opens straight from the click and is not blocked. */
+function gdWarm(){if(/^https?:$/.test(location.protocol))gdInit().catch(function(){});}
+['pointerover','focusin','touchstart'].forEach(function(ev){document.addEventListener(ev,function(e){if(e.target.closest&&e.target.closest('[data-drive],[data-drivebtn]'))gdWarm();},{passive:true});});
+if(/^https?:$/.test(location.protocol))setTimeout(gdWarm,4000);
 function gdToken(){
   if(GDRIVE.token&&Date.now()<GDRIVE.exp)return Promise.resolve(GDRIVE.token);
   return new Promise(function(res,rej){
-    var cb=function(r){if(r&&r.access_token){GDRIVE.token=r.access_token;GDRIVE.exp=Date.now()+((+r.expires_in||3600)-60)*1000;res(r.access_token);}else rej(new Error((r&&r.error)||'Google sign-in was cancelled.'));};
-    GDRIVE.tc=google.accounts.oauth2.initTokenClient({client_id:GDRIVE.client,scope:GDRIVE.scope,callback:cb,error_callback:function(e){rej(new Error(e&&e.type==='popup_closed'?'Google sign-in was closed.':'Google sign-in failed.'));}});
-    GDRIVE.tc.requestAccessToken({prompt:GDRIVE.token?'':'select_account'});
+    var cb=function(r){if(r&&r.access_token){GDRIVE.token=r.access_token;GDRIVE.exp=Date.now()+((+r.expires_in||3600)-60)*1000;gdWho(r.access_token);res(r.access_token);}else rej(new Error((r&&r.error_description)||(r&&r.error)||'Google sign-in was cancelled.'));};
+    var cfg={client_id:GDRIVE.client,scope:GDRIVE.scope,callback:cb,error_callback:function(e){var t=e&&e.type;
+      rej(new Error(t==='popup_failed_to_open'?'Your browser blocked the Google sign-in window. Allow pop-ups for this site (the icon at the right of the address bar), then click From Drive again.':t==='popup_closed'?'Google sign-in was closed.':'Google sign-in failed.'));}};
+    /* the account used last time: the sign-in and the picker then use the same Google account */
+    if(GDRIVE.email){cfg.login_hint=GDRIVE.email;cfg.hint=GDRIVE.email;}
+    GDRIVE.tc=google.accounts.oauth2.initTokenClient(cfg);
+    GDRIVE.tc.requestAccessToken(GDRIVE.email?{login_hint:GDRIVE.email,prompt:''}:{prompt:'select_account'});
   });
 }
+function gdWho(tok){fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+tok}}).then(function(r){return r.ok?r.json():null;}).then(function(u){if(u&&u.email){GDRIVE.email=u.email;try{localStorage.setItem('agiwm-gdrive-email',u.email);}catch(e){}}}).catch(function(){});}
+var GD_COOKIE_HINT='If the Drive window shows "Sign in", click it there. If it keeps asking, your browser is blocking Google\'s cookies in this window: allow third-party cookies for docs.google.com (Chrome: Settings > Privacy and security > Third-party cookies > Sites allowed > add [*.]google.com), or use Upload photo instead.';
 function drivePick(key,cfg){
   if(location.protocol==='file:'){toast('Drive works on the hosted studio (flyers.soundmind.org.in), not from a file on your computer.');return;}
+  var target=state,opened=0;   /* the flyer showing now gets the image, even if another one is showing when it arrives */
   toast('Opening Google Drive\u2026');
   gdInit().then(gdToken).then(function(tok){
-    var view=new google.picker.DocsView(google.picker.ViewId.DOCS_IMAGES).setIncludeFolders(true).setMimeTypes('image/jpeg,image/png,image/webp').setMode(google.picker.DocsViewMode.GRID);
+    var view=new google.picker.DocsView(google.picker.ViewId.DOCS_IMAGES).setIncludeFolders(true).setMimeTypes('image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif').setMode(google.picker.DocsViewMode.GRID);
     new google.picker.PickerBuilder().addView(view).addView(new google.picker.DocsUploadView())
-      .setOAuthToken(tok).setDeveloperKey(GDRIVE.key).setAppId(GDRIVE.app).setTitle('Choose an image for the flyer')
+      .setOAuthToken(tok).setDeveloperKey(GDRIVE.key).setAppId(GDRIVE.app).setOrigin(location.origin).setTitle('Choose an image for the flyer')
       .setCallback(function(d){
-        if(d.action!==google.picker.Action.PICKED)return;
+        var A=google.picker.Action;
+        if(d.action===A.LOADED){opened=Date.now();var seen=0;try{seen=+localStorage.getItem('agiwm-gd-hint')||0;}catch(e){}
+          if(!seen){try{localStorage.setItem('agiwm-gd-hint','1');}catch(e){}setTimeout(function(){toast(GD_COOKIE_HINT,null,12000);},1500);}return;}
+        if(d.action===A.CANCEL){if(opened&&Date.now()-opened<30000)toast(GD_COOKIE_HINT,null,12000);return;}
+        if(d.action!==A.PICKED)return;
         var doc=d.docs&&d.docs[0];if(!doc)return;
         toast('Loading '+(doc.name||'image')+'\u2026');
-        fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(doc.id)+'?alt=media',{headers:{Authorization:'Bearer '+GDRIVE.token}})
+        var c=cfg||{max:1600,fmt:'auto'},heic=/hei[cf]/i.test(doc.mimeType||'')||/\.(heic|heif)$/i.test(doc.name||'');
+        var auth={headers:{Authorization:'Bearer '+GDRIVE.token}};
+        function asImage(b){var f=new File([b],doc.name||'drive-image',{type:b.type||doc.mimeType||''});return loadImageInfo(f,c.max||1600,(c.fmt||'auto')==='auto'?(b.type==='image/png'?'png':'jpeg'):c.fmt);}
+        /* HEIC: most browsers cannot open it, so ask Drive for its own JPG preview of the photo */
+        function viaThumb(){return fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(doc.id)+'?fields=thumbnailLink',auth).then(function(r){return r.ok?r.json():{};})
+          .then(function(m){if(!m.thumbnailLink)throw new Error(HEIC_MSG);return fetch(m.thumbnailLink.replace(/=s\d+$/,'=s1600'));})
+          .then(function(r){if(!r.ok)throw new Error(HEIC_MSG);return r.blob();}).then(asImage).catch(function(){throw new Error(HEIC_MSG);});}
+        fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(doc.id)+'?alt=media',auth)
           .then(function(r){if(!r.ok)throw new Error('Drive said '+r.status);return r.blob();})
-          .then(function(b){
-            if(!/^image\/(jpeg|png|webp|gif)$/.test(b.type))throw new Error('type');
-            var c=cfg||{max:1600,fmt:'auto'};
-            return loadImage(b,c.max||1600,(c.fmt||'auto')==='auto'?(b.type==='image/png'?'png':'jpeg'):c.fmt);
-          })
-          .then(function(u){setp(state,key,u);resetPhoto(key);changed();syncAll();toast('Image from Drive added.');})
-          .catch(function(e){toast(e.message==='type'?'That file is not a JPG, PNG or WebP image. iPhone HEIC photos: save as JPG first.':'Could not load that image from Drive ('+e.message+').');});
+          .then(function(b){return asImage(b).catch(function(e){if(heic||e.message===HEIC_MSG)return viaThumb();throw e;});})
+          .then(function(r){return applyImage(target,key,r,'Image from Drive added.');})
+          .catch(function(e){toast((e&&e.message)?(/^Drive said/.test(e.message)?'Could not load that image from Drive ('+e.message+').':e.message):'Could not load that image from Drive.');});
       }).build().setVisible(true);
   }).catch(function(e){toast(e.message||'Google Drive is not available right now.');});
 }
 
 /* ---------- rendering the flyer ---------- */
 function fit(el,maxW,max,min){var s=max;el.style.fontSize=s+'px';while(el.offsetWidth>maxW&&s>min){s-=2;el.style.fontSize=s+'px';}}
+/* Names and second lines: shrink a little on one line, then wrap onto two lines, then shrink further.
+   Long names are no longer cut off at the card edge. */
+function fitWrap(el,maxW,max,min,lines){
+  var s=max,one=Math.max(min,Math.round(max*0.86));
+  el.style.whiteSpace='nowrap';el.style.maxWidth='';el.style.fontSize=s+'px';
+  while(el.offsetWidth>maxW&&s>one){s-=2;el.style.fontSize=s+'px';}
+  if(el.offsetWidth<=maxW)return;
+  s=max;el.style.fontSize=s+'px';el.style.whiteSpace='normal';el.style.maxWidth=maxW+'px';
+  for(;;){
+    var lh=parseFloat(getComputedStyle(el).lineHeight)||s*1.15;
+    if(el.scrollWidth<=maxW+1&&el.offsetHeight<=lh*(lines||2)+2)return;
+    if(s<=min)return;
+    s-=2;el.style.fontSize=s+'px';
+  }
+}
 function T_(sel,txt,root){var e=$(sel,root);e.textContent=txt;return e;}
 function show(el,on,disp){el.style.display=on?(disp||''):'none';}
+/* Split into user-visible letters (a Telugu letter with its vowel sign is one), so marks never end up
+   alone. The big-first-letter look is for Latin words only; other scripts keep one size. */
+var SEG=(window.Intl&&Intl.Segmenter)?new Intl.Segmenter(undefined,{granularity:'grapheme'}):null;
+function graphemes(w){return SEG?Array.from(SEG.segment(w),function(x){return x.segment;}):Array.from(w);}
 function buildHeading(el,text){
   el.textContent='';
   text.split(/\s+/).filter(Boolean).forEach(function(w){
     var wr=document.createElement('span');wr.className='w';
-    Array.from(w.toUpperCase()).forEach(function(ch,j){var s=document.createElement('span');s.className=j===0?'c1':'c2';s.textContent=ch;wr.appendChild(s);});
+    if(/[^\u0000-\u024F\u2018-\u201F]/.test(w)){var s0=document.createElement('span');s0.className='c2 nl';s0.textContent=w;wr.appendChild(s0);el.appendChild(wr);return;}
+    graphemes(w.toUpperCase()).forEach(function(ch,j){var s=document.createElement('span');s.className=j===0?'c1':'c2';s.textContent=ch;wr.appendChild(s);});
     el.appendChild(wr);
   });
 }
@@ -1396,13 +1500,34 @@ function renderPerson(card,p){
   show(card,p.show,'block');
   var lb=$('.lb',card),nm=$('.nm',card),pl=$('.pl',card);
   lb.textContent=p.label;show(lb,!!p.label,'block');
-  nm.textContent=p.name;fit(nm,480,35,20);
-  pl.textContent=p.place;show(pl,!!p.place,'inline-block');if(p.place)fit(pl,480,33,18);
-  var ph=$('.ph',card),em=$('.phe',card);
+  nm.textContent=p.name;fitWrap(nm,480,35,18,2);
+  pl.textContent=p.place;show(pl,!!p.place,'inline-block');if(p.place)fitWrap(pl,480,33,16,2);
+  var ph=$('.ph',card),em=$('.phe',card),pb=$('.phb',card),con=p.fit==='contain';
   ph.style.backgroundImage=p.photo?'url("'+p.photo+'")':'none';
+  ph.style.backgroundSize=con?'contain':'';ph.style.backgroundPosition=con?'50% 50%':'';
+  var bl=con&&p.photo?blurOf(p.photo):'';pb.style.backgroundImage=bl?'url("'+bl+'")':'none';pb.style.display=con&&p.photo?'block':'none';
   em.style.display=p.photo?'none':'flex';
-  ph.style.transform='translate('+p.x+'%,'+p.y+'%) scale('+p.z+')';
+  var m=maxOff(p),cx=Math.max(-m,Math.min(m,+p.x||0)),cy=Math.max(-m,Math.min(m,+p.y||0));
+  ph.style.transform='translate('+cx+'%,'+cy+'%) scale('+p.z+')';
 }
+/* With "Fill the card" the photo must always cover the card: at zoom z it can move (z-1)*50 % each way.
+   "Fit whole photo" can move half the card. Same limits as the connector (flyer.js). */
+function maxOff(p){return p&&p.fit==='contain'?50:Math.max(0,((+p.z||1)-1)*50);}
+function clampPhoto(p){if(!p)return;var m=maxOff(p);p.x=Math.round(Math.max(-m,Math.min(m,+p.x||0))*10)/10;p.y=Math.round(Math.max(-m,Math.min(m,+p.y||0))*10)/10;}
+/* "Fit whole photo": a blurred copy of the photo fills the space around it. Made on a canvas (a tiny
+   copy scaled up), because html2canvas does not draw CSS blur filters. */
+var BLUR={},BLURP={};
+function blurOf(u){
+  if(BLUR[u])return BLUR[u];
+  if(!BLURP[u])BLURP[u]=new Promise(function(res){var im=new Image();im.onload=function(){
+      try{var w=24,h=Math.max(1,Math.round(w*im.height/im.width)),a=document.createElement('canvas');a.width=w;a.height=h;var g=a.getContext('2d');g.drawImage(im,0,0,w,h);
+        var b=document.createElement('canvas');b.width=360;b.height=Math.round(360*h/w);var g2=b.getContext('2d');g2.imageSmoothingEnabled=true;g2.imageSmoothingQuality='high';g2.drawImage(a,0,0,b.width,b.height);
+        g2.fillStyle='rgba(255,255,255,.12)';g2.fillRect(0,0,b.width,b.height);BLUR[u]=b.toDataURL('image/jpeg',0.8);}catch(e){BLUR[u]='';}
+      var ks=Object.keys(BLUR);if(ks.length>12)delete BLUR[ks[0]];
+      res();schedule();};im.onerror=function(){BLUR[u]='';res();};im.src=u;});
+  return '';
+}
+function pendingBlurs(){var ps=[];['left','right'].forEach(function(k){var p=state[k];if(p&&p.fit==='contain'&&p.photo){blurOf(p.photo);if(BLURP[p.photo])ps.push(BLURP[p.photo]);}});return Promise.all(ps).then(function(){render();});}
 var FONTAPPLY={title:['#ttl'],sub:['#sub'],loc:['#loc'],script:['#scr'],heading:['#hd'],tags:['#tags'],
   left:['#cardL .nm','#cardL .pl'],right:['#cardR .nm','#cardR .pl'],d1:['#dc1 .dt','#dc1 .wd','#dc1 .tm'],d2:['#dc2 .dt','#dc2 .wd','#dc2 .tm'],
   zoom:['#zoomG .l1','#zoomG .l2'],yt:['#ytG .l1','#ytG .hd2'],btn:['#jt']};
@@ -1462,7 +1587,7 @@ function render(){
   $('#bgglow').style.background='radial-gradient(ellipse 52% 56% at 50% 46%,rgba(255,252,247,'+b.glow+') 0%,rgba(255,252,247,'+(b.glow*0.55)+') 55%,rgba(255,252,247,0) 100%)';
   var bb0=$('.bgbase');if(b.grad&&!b.img){bb0.style.background='linear-gradient('+b.ang+'deg,'+b.g1+','+b.g2+')';}else{bb0.style.background='';bb0.style.backgroundColor=b.base;}
   var lg=$('#logo');lg.style.backgroundImage=state.logo?'url("'+state.logo+'")':'none';show(lg,state.showLogo&&!!state.logo,'block');
-  var ttl=T_('#ttl',state.title);ttl.style.color=c.maroon;fit(ttl,960,184,70);
+  var ttl=T_('#ttl',state.title);ttl.style.color=c.maroon;fit(ttl,titleRoom(),184,70);
   fit(T_('#sub',state.sub),1020,31,16);
   fit(T_('#loc',state.loc),500,30,16);
   var scr=$('#scr');buildScript(scr,state.script,state.heart);fit(scr,815,235,100);
@@ -1483,6 +1608,14 @@ function render(){
   applyLayers();
   placeSel();
 }
+/* Width the centred title may use without running into the logo (the logo can be moved and scaled). */
+function titleRoom(){
+  var w=960;if(!state.showLogo||!state.logo)return w;
+  var L=state.sty&&state.sty.logo||{},sz=+L.sz||1,half=152*sz,cx=88+152+(+L.dx||0),cy=8+152+(+L.dy||0);
+  if(cy-half>162||cy+half<2||(L.op!==undefined&&+L.op===0))return w;
+  var gap=16,room=cx<1000?2*(1000-(cx+half)-gap):2*((cx-half)-1000-gap);
+  return Math.max(300,Math.min(w,room));
+}
 var raf=0;function schedule(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;render();});}
 
 /* ---------- saving, history, thumbnails ---------- */
@@ -1494,7 +1627,10 @@ function pushHist(){
   hist=hist.slice(0,hi+1);hist.push(snapDeck());if(hist.length>60)hist.shift();hi=hist.length-1;updUndo();
 }
 function updUndo(){$('#undo').disabled=hi<=0;$('#redo').disabled=hi>=hist.length-1;}
-function restore(d){endEdit(true);deck=cp(d);bind();syncAll();snapAll();drawStrip();buildBar();updCounter();$('#deckName').value=deck.name;persist();}
+function restore(d){endEdit(true);var lid=deck.liveId;deck=cp(d);
+  /* undo/redo never changes which flyer is live; if the live flyer is not in that snapshot, none is */
+  if(lid!==undefined)deck.liveId=deck.flyers.some(function(f){return f.id===lid;})?lid:(deck.flyers.some(function(f){return f.id===d.liveId;})?d.liveId:'');
+  bind();syncAll();snapAll();drawStrip();buildBar();updCounter();$('#deckName').value=deck.name;persist();}
 function undo(){flush();if(hi>0){hi--;restore(hist[hi]);updUndo();}}
 function redo(){if(hi<hist.length-1){hi++;restore(hist[hi]);updUndo();}}
 $('#undo').addEventListener('click',undo);$('#redo').addEventListener('click',redo);
@@ -1528,7 +1664,10 @@ function drawStrip(){
     var tw=document.createElement('div');tw.className='tw'+(i===deck.i?' on':'');tw.tabIndex=0;tw.setAttribute('role','button');tw.setAttribute('aria-label','Flyer '+(i+1));
     var th=document.createElement('div');th.className='thumb';var sn=document.createElement('div');sn.className='snap';sn.innerHTML=snaps[f.id]||'';th.appendChild(sn);tw.appendChild(th);
     var n=document.createElement('span');n.className='tnum';n.textContent=String(i+1);tw.appendChild(n);
+    if(window.__liveOn&&f.id===deck.liveId){var lv=document.createElement('span');lv.className='tlive';lv.textContent='LIVE';lv.title='This flyer is the live one: Claude and the bot see and change it';tw.appendChild(lv);tw.setAttribute('aria-label','Flyer '+(i+1)+', live');}
     var act=document.createElement('div');act.className='tact';
+    if(window.__liveOn&&f.id!==deck.liveId){var mk=document.createElement('button');mk.type='button';mk.className='mklive';mk.title='Make this flyer the live one';mk.setAttribute('aria-label','Make flyer '+(i+1)+' live');mk.textContent='Make live';
+      mk.addEventListener('click',function(e){e.stopPropagation();if(window.__makeLive)window.__makeLive(f.id);});act.appendChild(mk);}
     var dup=document.createElement('button');dup.type='button';dup.title='Duplicate';dup.setAttribute('aria-label','Duplicate flyer '+(i+1));dup.innerHTML=icon('copy');
     dup.addEventListener('click',function(e){e.stopPropagation();duplicate(i);});act.appendChild(dup);
     if(deck.flyers.length>1){var del=document.createElement('button');del.type='button';del.className='danger';del.title='Delete';del.setAttribute('aria-label','Delete flyer '+(i+1));del.innerHTML=icon('trash');
@@ -1560,7 +1699,9 @@ function removeFlyer(i){
   flush();
   if(deck.flyers.length<2)return;
   var f=deck.flyers.splice(i,1)[0];delete snaps[f.id];if(deck.i>=i&&deck.i>0)deck.i--;bind();
-  syncAll();render();drawStrip();updCounter();buildBar();pushHist();persist();toast('Flyer deleted. Undo brings it back.');
+  var wasLive=window.__liveOn&&f.id===deck.liveId;if(f.id===deck.liveId)deck.liveId='';
+  syncAll();render();drawStrip();updCounter();buildBar();pushHist();persist();
+  toast(wasLive?'The live flyer was deleted. Pick another flyer and use "Make live", or Undo.':'Flyer deleted. Undo brings it back.',{label:'Undo',fn:undo});
 }
 $('#prev').addEventListener('click',function(){goto(deck.i-1);});
 $('#next').addEventListener('click',function(){goto(deck.i+1);});
@@ -1585,24 +1726,32 @@ if(window.ResizeObserver)new ResizeObserver(rescale).observe($('#canvasWrap'));w
 /* ---------- drag and zoom photos on the flyer ---------- */
 [['#cardL','left'],['#cardR','right']].forEach(function(a){
   var card=$(a[0]),w=$('.phw',card),key=a[1],drag=null;
-  w.addEventListener('pointerdown',function(e){if(e.pointerType==='touch')return;drag={x:e.clientX,y:e.clientY,px:state[key].x,py:state[key].y};w.classList.add('drag');w.setPointerCapture(e.pointerId);e.preventDefault();});
-  w.addEventListener('pointermove',function(e){if(!drag)return;var p=state[key];
-    p.x=Math.max(-60,Math.min(60,drag.px+(e.clientX-drag.x)/scale/card.offsetWidth*100));
-    p.y=Math.max(-60,Math.min(60,drag.py+(e.clientY-drag.y)/scale/card.offsetHeight*100));
-    p.x=Math.round(p.x*10)/10;p.y=Math.round(p.y*10)/10;changed();});
+  /* mouse: drag any time; touch: drag once the card is selected (a first tap selects it), so a finger on
+     an unselected card still scrolls the page */
+  w.addEventListener('pointerdown',function(e){if(!state[key].photo)return;if(e.pointerType==='touch'&&selKey!==key)return;
+    e.stopPropagation();/* the photo moves inside the card; the card itself moves by its name plate */
+    drag={x:e.clientX,y:e.clientY,px:state[key].x,py:state[key].y,id:e.pointerId,moved:false};w.classList.add('drag');try{w.setPointerCapture(e.pointerId);}catch(x){}if(e.pointerType!=='touch')e.preventDefault();});
+  w.addEventListener('pointermove',function(e){if(!drag||e.pointerId!==drag.id)return;var p=state[key];
+    if(!drag.moved&&Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)<4)return;drag.moved=true;e.preventDefault();
+    p.x=drag.px+(e.clientX-drag.x)/scale/card.offsetWidth*100;
+    p.y=drag.py+(e.clientY-drag.y)/scale/card.offsetHeight*100;
+    clampPhoto(p);changed();});
   function end(){drag=null;w.classList.remove('drag');}
   w.addEventListener('pointerup',end);w.addEventListener('pointercancel',end);
-  w.addEventListener('wheel',function(e){if(!state[key].photo)return;e.preventDefault();var p=state[key];p.z=Math.max(1,Math.min(4,Math.round((p.z-e.deltaY*0.002)*100)/100));changed();},{passive:false});
+  w.addEventListener('wheel',function(e){if(!state[key].photo)return;e.preventDefault();var p=state[key];p.z=Math.max(1,Math.min(4,Math.round((p.z-e.deltaY*0.002)*100)/100));clampPhoto(p);changed();},{passive:false});
 });
 
 /* ---------- messages and menus ---------- */
-var tt=0;function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on');},3200);}
+var tt=0;function toast(m,act,ms){var t=$('#toast');t.textContent=m;
+  if(act){var b=document.createElement('button');b.type='button';b.className='tbtn';b.textContent=act.label;b.addEventListener('click',function(){t.classList.remove('on');act.fn();});t.appendChild(b);}
+  t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on');},ms||(act?8000:Math.max(3200,Math.min(9000,m.length*55))));}
 var openPop=null;
 function closePop(){if(openPop){openPop.remove();openPop=null;}}
 function menu(anchor,items,alignRight){
   closePop();
   var p=document.createElement('div');p.className='pop';p.setAttribute('role','menu');
   items.forEach(function(it){
+    if(!it)return;
     if(it==='-'){p.appendChild(document.createElement('hr'));return;}
     var b=document.createElement('button');b.type='button';b.className='mi';b.setAttribute('role','menuitem');
     var l=document.createElement('span');l.textContent=it.label;b.appendChild(l);
@@ -1619,24 +1768,51 @@ function menu(anchor,items,alignRight){
 }
 
 /* ---------- export ---------- */
+/* Every font the flyer uses, with the weights and letters it uses (Telugu included), loaded before
+   measuring: per-text fonts (sty.*.font) as well as group fonts. */
+function preloadFonts(){
+  if(!document.fonts||!document.fonts.load)return Promise.resolve();
+  var want={};
+  Object.keys(state.fonts||{}).forEach(function(k){if(state.fonts[k])needFont(state.fonts[k]);});
+  Object.keys(state.sty||{}).forEach(function(k){var f=state.sty[k]&&state.sty[k].font;if(f)needFont(f);});
+  $$('*',stage).forEach(function(el){
+    if(el.closest('.ui-only'))return;
+    var t='';for(var i=0;i<el.childNodes.length;i++)if(el.childNodes[i].nodeType===3)t+=el.childNodes[i].nodeValue;
+    t=t.replace(/\s+/g,' ').trim();if(!t)return;
+    var cs=getComputedStyle(el);if(cs.display==='none')return;
+    var spec=cs.fontStyle+' '+cs.fontWeight+' 40px '+cs.fontFamily;
+    want[spec]=(want[spec]||'')+t+t.toUpperCase()+t.toLowerCase();
+  });
+  return Promise.all(Object.keys(want).map(function(spec){return document.fonts.load(spec,want[spec].slice(0,400)).catch(function(){});}))
+    .then(function(){return document.fonts.ready;});
+}
+/* used by the server's renderer before it exports */
+window.__flyerFontsReady=function(){render();return preloadFonts().then(function(){render();return pendingBlurs();});};
+var warmed=false;
 function draw(sc){
   if(!window.html2canvas)return Promise.reject(new Error('The image library did not load. Check your connection and try again.'));
-  var used=Object.keys(state.fonts||{}).map(function(k){return state.fonts[k];}).filter(Boolean);
-  var fr=Promise.all(used.map(needFont)).then(function(){return document.fonts&&document.fonts.ready?document.fonts.ready:null;});
-  return fr.then(function(){render();
-    var holder=document.createElement('div');
-    holder.style.cssText='position:fixed;left:0;top:0;width:2000px;height:1125px;z-index:-1;pointer-events:none;overflow:hidden';
-    var cl=stage.cloneNode(true);cl.style.transform='none';
-    $$('.ui-only',cl).forEach(function(n){n.parentNode.removeChild(n);});
-    holder.appendChild(cl);document.body.appendChild(holder);
-    return window.html2canvas(cl,{scale:sc,width:2000,height:1125,windowWidth:2000,windowHeight:1125,x:0,y:0,scrollX:0,scrollY:0,backgroundColor:'#ffffff',logging:false,useCORS:false})
-      .then(function(cv){document.body.removeChild(holder);return cv;},function(err){document.body.removeChild(holder);throw err;});
+  render();
+  return preloadFonts().then(pendingBlurs).then(function(){render();
+    function pass(scale){
+      var holder=document.createElement('div');
+      holder.style.cssText='position:fixed;left:0;top:0;width:2000px;height:1125px;z-index:-1;pointer-events:none;overflow:hidden';
+      var cl=stage.cloneNode(true);cl.style.transform='none';
+      $$('.ui-only',cl).forEach(function(n){n.parentNode.removeChild(n);});
+      holder.appendChild(cl);document.body.appendChild(holder);
+      return window.html2canvas(cl,{scale:scale,width:2000,height:1125,windowWidth:2000,windowHeight:1125,x:0,y:0,scrollX:0,scrollY:0,backgroundColor:'#ffffff',logging:false,useCORS:false})
+        .then(function(cv){document.body.removeChild(holder);return cv;},function(err){document.body.removeChild(holder);throw err;});
+    }
+    /* the first picture after the page loads came out with the heading shifted: html2canvas's copy of
+       the page had not settled its fonts yet. A small throwaway pass first makes the real one match. */
+    if(warmed)return pass(sc);
+    return pass(0.1).then(function(){warmed=true;return pass(sc);},function(){warmed=true;return pass(sc);});
   });
 }
-function baseName(){
+function baseName(sc){
   var n=(deck.name||'agiwm-flyer').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'agiwm-flyer';
-  var p=dateParts(state.d1.date);return n+(p?'-'+p.y+'-'+p.mon.toLowerCase()+'-'+p.n:'');
+  var p=dateParts(state.d1.date);return n+(p?'-'+p.y+'-'+p.mon.toLowerCase()+'-'+p.n:'')+(sc?'-'+sizeName(sc):'');
 }
+function sizeName(sc){return Math.round(2000*sc)+'x'+Math.round(1125*sc);}
 function saveBlob(blob,name){
   var c=window.claude&&window.claude.use?window.claude.use('downloads'):Promise.resolve(null);
   return Promise.resolve(c).then(function(dl){
@@ -1661,7 +1837,7 @@ function exportAs(kind,sc){
   endEdit(true);selectTarget(null);
   draw(sc).then(function(cv){
     return new Promise(function(res,rej){cv.toBlob(function(b){b?res(b):rej(new Error('The image could not be created.'));},kind==='jpg'?'image/jpeg':'image/png',0.93);});
-  }).then(function(blob){return saveBlob(blob,baseName()+'.'+(kind==='jpg'?'jpg':'png'));})
+  }).then(function(blob){return saveBlob(blob,baseName(sc)+'.'+(kind==='jpg'?'jpg':'png'));})
   .catch(function(err){toast((err&&err.message)||'The flyer could not be created.');})
   .then(function(){busy=false;$('#dlBtn').disabled=false;$('#quickDl').disabled=false;});
 }
@@ -1715,9 +1891,13 @@ function cleanse(src,def){
 }
 function cleanseDeck(src){
   var flyers=src&&Array.isArray(src.flyers)?src.flyers:(src&&typeof src==='object'?[src]:[]);
-  var out={name:(src&&typeof src.name==='string'?src.name:'AGIWM flyers').slice(0,60),i:0,flyers:[]};
-  flyers.slice(0,40).forEach(function(f){var c=cleanse(f,DEF);c.id=uid();out.flyers.push(c);});
+  var out={name:(src&&typeof src.name==='string'?src.name:'AGIWM flyers').slice(0,60),i:0,flyers:[]},used={};
+  /* ids are kept (the live link remembers which flyer is live by its id) */
+  flyers.slice(0,40).forEach(function(f){var c=cleanse(f,DEF),id=f&&f.id;c.id=(typeof id==='string'&&/^[a-z0-9]{4,16}$/.test(id)&&!used[id])?id:uid();used[c.id]=1;out.flyers.push(c);});
   if(!out.flyers.length)out.flyers.push(newFlyer());
+  /* liveId: the flyer the live link shows. Missing = not chosen yet (the selected flyer becomes live);
+     '' = none (the live flyer was deleted). */
+  if(src&&typeof src.liveId==='string')out.liveId=used[src.liveId]?src.liveId:'';
   out.i=Math.min(Math.max(0,(src&&+src.i)||0),out.flyers.length-1);
   return out;
 }
@@ -1758,6 +1938,7 @@ $('#addBtn').addEventListener('click',function(e){
   e.stopPropagation();
   menu(this,[
     {label:'Duplicate this flyer',fn:function(){duplicate(deck.i);}},
+    window.__liveOn&&state.id!==deck.liveId?{label:'Make this flyer live',hint:'Claude and the bot will see it',fn:function(){window.__makeLive(state.id);}}:null,
     {label:'New flyer, original layout',fn:addBlank},
     {label:'Make flyers from a schedule...',fn:scheduleDlg},
     {label:'Invite text for WhatsApp...',fn:inviteDlg},
@@ -1795,8 +1976,8 @@ function downloadAll(){
     chain=chain.then(function(){deck.i=i;bind();toast('Flyer '+(i+1)+' of '+deck.flyers.length+'...');return draw(1);})
       .then(function(cv){return new Promise(function(res,rej){cv.toBlob(function(b){b?res(b):rej(new Error('An image could not be created.'));},'image/png');});})
       .then(function(b){return b.arrayBuffer();})
-      .then(function(ab){var who=(state.left.name||'flyer').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30);
-        files.push({name:('0'+(i+1)).slice(-2)+'-'+baseName()+'-'+who+'.png',data:new Uint8Array(ab)});});
+      .then(function(ab){var who=(state.left.name||'flyer').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30)||'flyer';
+        files.push({name:('0'+(i+1)).slice(-2)+'-'+baseName()+'-'+who+'-'+sizeName(1)+'.png',data:new Uint8Array(ab)});});
   });
   chain.then(function(){var n=(deck.name||'agiwm-flyers').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'agiwm-flyers';
       deck.i=keep;bind();render();return saveBlob(zipStore(files),n+'.zip');})
@@ -1875,7 +2056,7 @@ function inviteDlg(){
   function prep(){
     picBusy=true;pic=null;sync();endEdit(true);
     draw(0.64).then(function(cv){return new Promise(function(res,rej){cv.toBlob(function(b){b?res(b):rej(new Error('picture'));},'image/jpeg',0.93);});})
-      .then(function(b){pic=new File([b],baseName()+'.jpg',{type:'image/jpeg'});},function(){pic=null;})
+      .then(function(b){pic=new File([b],baseName(0.64)+'.jpg',{type:'image/jpeg'});},function(){pic=null;})
       .then(function(){picBusy=false;if(dlg.isConnected)sync();});
   }
   function saveFile(f){var u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;dlg.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u);},4000);}
@@ -1983,7 +2164,7 @@ function scheduleDlg(){
   });});
   function set(m,quiet){
     mode=m;root.classList.toggle('ps',m==='ps');root.classList.toggle('fd',m==='fd');
-    btn.setAttribute('aria-pressed',String(m!=='slides'));btn.firstChild.textContent='Layout: '+LAB[m];
+    btn.setAttribute('aria-pressed',String(m!=='slides'));btn.textContent='';var sp0=document.createElement('span'),lp=document.createElement('span');lp.className='lp';lp.textContent='Layout: ';sp0.appendChild(lp);sp0.appendChild(document.createTextNode(LAB[m]));btn.appendChild(sp0);btn.setAttribute('aria-label','Layout: '+LAB[m]);
     try{localStorage.setItem(K,m);}catch(e){}
     if(typeof rescale==='function')setTimeout(rescale,30);
     buildLayers();fdUpdate();if(!quiet)toast(m==='fd'?'Floating layout: canvas first, tools in the bar below.':m==='ps'?'Photoshop layout: toolbox left, layers and options right.':'Slides layout.');
@@ -2188,11 +2369,17 @@ var _sel=selectTarget;selectTarget=function(k){if(k&&panel.classList.contains('a
 window.__aiToggle=toggle;
 })();
 
-/* ---------- live link to the server: Claude / a bot change this flyer while it is open ---------- */
+/* ---------- live link to the server: Claude / a bot change this flyer while it is open ----------
+   One flyer of the deck is the live one (deck.liveId, "LIVE" in the strip). Only that flyer is sent to
+   the server and only that flyer takes changes from Claude / the bot; moving between flyers, adding or
+   deleting them never sends anything. Each save names the version it was made on; if Claude changed the
+   flyer meanwhile the server says 409, and the page puts its own change on top of the new flyer and
+   sends again. The key goes in a header, never in the address. */
 (function(){
 if(window.top!==window||!/^https?:$/.test(location.protocol))return;
 var LK='agiwm-flyer-live',CID=Math.random().toString(36).slice(2,10);
-var btn=$('#liveBtn'),box=null,es=null,pollT=0,sendT=0,remote=false,lastVer=-1,lastSrv={},feed=[],status='off',key='';
+var btn=$('#liveBtn'),box=null,es=null,sendT=0,remote=false,lastVer=-1,lastSrv={},feed=[],status='off',key='',sending=false,again=false;
+var base=null,baseJson='';   /* the live flyer as the server last had it (what our edits are measured against) */
 function store(){try{return JSON.parse(localStorage.getItem(LK)||'{}');}catch(e){return {};}}
 function saveStore(o){try{localStorage.setItem(LK,JSON.stringify(o));}catch(e){}}
 key=store().key||'';
@@ -2200,36 +2387,90 @@ var m=/[#&]live=([^&]+)/.exec(location.hash||'');
 if(m){key=decodeURIComponent(m[1]);saveStore({key:key,on:true});try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
 btn.classList.add('show');
 function setS(s,label){status=s;btn.setAttribute('data-s',s);btn.querySelector('span').textContent=label;}
-function api(p,opt){return fetch(p+(p.indexOf('?')<0?'?':'&')+'k='+encodeURIComponent(key),opt);}
+function api(p,opt){opt=opt||{};var h={};Object.keys(opt.headers||{}).forEach(function(k){h[k]=opt.headers[k];});h['x-flyer-key']=key;return fetch(p,Object.assign({},opt,{headers:h}));}
+window.__liveApi=function(p,opt){return key?api(p,opt):Promise.reject(new Error('not live'));};
 function t2(ts){var d=new Date(ts);return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
-function flyerForServer(){
-  var f=cp(state);delete f.id;delete f.logo;
-  [['left','photo'],['right','photo'],['bg','img']].forEach(function(p){var v=f[p[0]][p[1]];var o=lastSrv[p[0]+'.'+p[1]];if(v&&v===o)f[p[0]][p[1]]='@keep';});
-  return f;
+function liveIdx(){for(var i=0;i<deck.flyers.length;i++)if(deck.flyers[i].id===deck.liveId)return i;return -1;}
+function liveFlyer(){var i=liveIdx();return i<0?null:deck.flyers[i];}
+function plain(f){var c=cp(f);delete c.id;delete c.logo;return c;}
+function forServer(f){
+  var c=plain(f);
+  [['left','photo'],['right','photo'],['bg','img']].forEach(function(p){var v=c[p[0]][p[1]];if(v&&v===lastSrv[p[0]+'.'+p[1]])c[p[0]][p[1]]='@keep';});
+  return c;
 }
-function noteSrv(){[['left','photo'],['right','photo'],['bg','img']].forEach(function(p){lastSrv[p[0]+'.'+p[1]]=state[p[0]][p[1]];});}
+function noteSrv(f){[['left','photo'],['right','photo'],['bg','img']].forEach(function(p){lastSrv[p[0]+'.'+p[1]]=f[p[0]][p[1]];});}
+function setBase(f){base=plain(f);baseJson=JSON.stringify(base);noteSrv(f);}
+
+/* what changed between two flyers: {path: newValue} for every changed leaf */
+function diff(a,b,pre,out){out=out||{};
+  Object.keys(b).forEach(function(k){var p=pre?pre+'.'+k:k,x=a&&a[k],y=b[k];
+    if(y&&typeof y==='object'&&!Array.isArray(y)&&x&&typeof x==='object')diff(x,y,p,out);
+    else if(JSON.stringify(x)!==JSON.stringify(y))out[p]=cp(y);});
+  return out;}
+function applyDiff(f,d){Object.keys(d).forEach(function(p){var parts=p.split('.'),last=parts.pop(),o=f;
+  for(var i=0;i<parts.length;i++){if(o[parts[i]]==null||typeof o[parts[i]]!=='object')o[parts[i]]={};o=o[parts[i]];}o[last]=cp(d[p]);});return f;}
+/* a short summary of a hand edit for the feed: "left name, right photo" */
+var NAMES={title:'title',sub:'subtitle',loc:'location',script:'script word',heart:'heart',heading:'heading',tags:'taglines',showLogo:'logo',
+  zoom:'Zoom details',yt:'YouTube',btn:'button',bg:'background',col:'colours',fonts:'fonts'};
+var PART={name:'name',place:'second line',label:'label',photo:'photo',z:'photo framing',x:'photo framing',y:'photo framing',fit:'photo fit',show:'card on/off'};
+function label(p){var q=p.split('.');
+  if(q[0]==='left'||q[0]==='right')return q[0]+' '+(PART[q[1]]||q[1]);
+  if(q[0]==='d1'||q[0]==='d2')return (q[0]==='d1'?'first ':'second ')+({date:'date',time:'time',flag:'flag',show:'time box on/off'}[q[1]]||'time box');
+  if(q[0]==='sty'){var L=LAYERBY[q[1]];return (L?L[1].toLowerCase():q[1])+' style';}
+  return NAMES[q[0]]||q[0];}
+function summary(d){var seen={},out=[];Object.keys(d).forEach(function(p){var l=label(p);if(!seen[l]){seen[l]=1;out.push(l);}});
+  return out.length>6?out.slice(0,6).join(', ')+' and more':out.join(', ');}
+
+/* Put a flyer from the server into the live slot. Unsent local edits of the live flyer are kept on top. */
 function applyRemote(fl,entry){
   remote=true;
   try{
     flush();
-    var id=state.id,c=cleanse(fl,DEF);c.id=id;c.logo=state.logo||DEF.logo;
-    deck.flyers[deck.i]=c;bind();
+    var i=liveIdx(),c=cleanse(fl,DEF),mine=null;
+    if(i<0){c.id=uid();c.logo=state.logo||DEF.logo;deck.flyers.push(c);deck.liveId=c.id;i=deck.flyers.length-1;
+      toast('The live flyer from the server was added as flyer '+(i+1)+'.');}
+    else{
+      var cur=deck.flyers[i];
+      if(base&&JSON.stringify(plain(cur))!==baseJson)mine=diff(base,plain(cur));   /* edits not yet on the server */
+      c.id=cur.id;c.logo=cur.logo||DEF.logo;
+      setBase(c);
+      if(mine)applyDiff(c,mine);
+      deck.flyers[i]=c;
+    }
+    if(!mine)setBase(c);
     Object.keys(c.fonts||{}).forEach(function(k){if(c.fonts[k])needFont(c.fonts[k]);});
-    render();syncAll();buildBar();pushHist();persist();takeSnap();updateThumb(deck.i);noteSrv();
+    if(i===deck.i){bind();render();syncAll();buildBar();takeSnap();updateThumb(i);}
+    else{var keep=deck.i;deck.i=i;bind();render();takeSnap();deck.i=keep;bind();render();drawStrip();updCounter();}
+    pushHist();persist();
+    if(mine)queueSend(300);
   }finally{remote=false;}
   btn.classList.remove('ping');void btn.offsetWidth;btn.classList.add('ping');
-  if(entry)toast(entry.by+': '+entry.text.slice(0,90));
+  if(entry)toast(entry.by+': '+entry.text.slice(0,90)+(i!==deck.i?' (flyer '+(i+1)+')':''));
 }
 function onState(d,fromEvent){
   if(d.origin===CID)return;
   if(d.version<=lastVer&&fromEvent)return;
   lastVer=d.version;
-  if(d.entry)feed=[d.entry].concat(feed).slice(0,40);else if(d.feed)feed=d.feed;
+  if(d.entry)feed=[d.entry].concat(feed.filter(function(e){return !(e.t===d.entry.t&&e.text===d.entry.text);})).slice(0,40);else if(d.feed)feed=d.feed;
   if(d.version>0||fromEvent)applyRemote(d.flyer||{},fromEvent?d.entry:null);
   drawFeed();
 }
+function openStream(){
+  if(es){es.close();es=null;}
+  api('/api/live-token',{method:'POST'}).then(function(r){return r.ok?r.json():null;},function(){return null;})
+  .then(function(t){
+    if(!key)return;
+    /* older servers have no tokens: fall back to the key in the address */
+    es=new EventSource('/api/live?'+(t&&t.token?'t='+encodeURIComponent(t.token):'k='+encodeURIComponent(key)));
+    es.onmessage=function(e){try{onState(JSON.parse(e.data),true);}catch(x){}};
+    es.onerror=function(){setS('wait','Reconnecting...');if(es&&es.readyState===2){es.close();es=null;setTimeout(function(){if(key&&!es)catchUp();},3000);}};
+    es.onopen=function(){setS('on','Live');queueSend(100);};
+  });
+}
+/* after a broken stream: fetch the current state, then listen again */
+function catchUp(){api('/api/state').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.version!==lastVer){d.origin='';onState(d,true);}openStream();},function(){setTimeout(catchUp,5000);});}
 function connect(){
   disconnect(true);
   if(!key){setS('off','Go live');return;}
@@ -2238,37 +2479,69 @@ function connect(){
     if(r.status===401)throw new Error('The live key was not accepted.');
     if(!r.ok)throw new Error('No live server at this address.');return r.json();})
   .then(function(d){
+    window.__liveOn=true;
+    if(deck.liveId===undefined||(deck.liveId&&liveIdx()<0))deck.liveId=state.id;   /* first time: the flyer showing now is the live one */
+    drawStrip();
     lastVer=d.version;feed=d.feed||[];
-    if(d.version>0){applyRemote(d.flyer,null);}else{sendNow(true);}
-    setS('on','Live');drawFeed();
-    es=new EventSource('/api/live?k='+encodeURIComponent(key));
-    es.onmessage=function(e){try{onState(JSON.parse(e.data),true);}catch(x){}};
-    es.onerror=function(){setS('wait','Reconnecting...');};
-    es.onopen=function(){setS('on','Live');};
+    if(d.version>0){applyRemote(d.flyer,null);}else{var lf=liveFlyer();if(lf){setBase(lf);base=null;baseJson='';sendNow();}}
+    setS('on','Live');drawFeed();openStream();
   }).catch(function(e){setS('bad','Not live');box&&drawFeed(e.message);});
 }
-function disconnect(keep){if(es){es.close();es=null;}clearTimeout(sendT);if(!keep){setS('off','Go live');}}
-function sendNow(first){
+function disconnect(keep){if(es){es.close();es=null;}clearTimeout(sendT);if(!keep){setS('off','Go live');window.__liveOn=false;drawStrip();}}
+function queueSend(ms){clearTimeout(sendT);sendT=setTimeout(function(){sendNow();},ms);}
+/* send the live flyer if it differs from what the server has */
+function sendNow(opt){
+  opt=opt||{};
   if(!key||status==='bad')return;
-  clearTimeout(sendT);
-  api('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({flyer:flyerForServer(),client:CID,text:first?null:null})})
-  .then(function(r){return r.ok?r.json():null;}).then(function(d){if(d){lastVer=d.version;noteSrv();}}).catch(function(){});
+  if(sending){again=true;return;}
+  var lf=liveFlyer();if(!lf)return;
+  var now=plain(lf),nowJson=JSON.stringify(now);
+  if(!opt.force&&nowJson===baseJson)return;
+  var sentBase=base,text=base?summary(diff(base,now)):'',body={flyer:forServer(lf),client:CID,baseVersion:lastVer,text:text||null};
+  sending=true;
+  api('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(function(r){
+    if(r.status===409)return r.json().then(function(d){
+      /* someone else changed the live flyer: take theirs, put this change on top, send again */
+      lastVer=d.version;feed=d.feed||feed;
+      if(opt.force){sending=false;return sendNow(opt);}
+      /* this page's own changes = the live flyer now, measured against what it was based on when sent
+         (not against a newer copy that may have arrived meanwhile) */
+      var lfn=liveFlyer(),cur=lfn?plain(lfn):now,mine=diff(sentBase||plain(cleanse({},DEF)),cur),c=cleanse(d.flyer||{},DEF);
+      Object.keys(mine).forEach(function(p){if(JSON.stringify(getp(plain(c),p))===JSON.stringify(mine[p]))delete mine[p];});
+      setBase(c);applyDiff(c,mine);
+      var i=liveIdx();if(i>=0){c.id=deck.flyers[i].id;c.logo=deck.flyers[i].logo;deck.flyers[i]=c;if(i===deck.i){bind();render();syncAll();}remote=true;try{persist();}finally{remote=false;}}
+      sending=false;drawFeed();
+      if((opt.tries||0)<3)return sendNow({tries:(opt.tries||0)+1});
+    });
+    return r.ok?r.json().then(function(d){lastVer=d.version;setBase(now);sending=false;}):(sending=false,null);
+  }).catch(function(){sending=false;})
+  .then(function(){if(again){again=false;queueSend(50);}});
 }
-/* local edits go to the server (and so to Claude) */
-var _persist=persist;persist=function(){_persist();if(!remote&&es){clearTimeout(sendT);sendT=setTimeout(function(){sendNow(false);},700);}};
+/* make another flyer of the deck the live one: it is sent to the server as it is */
+window.__makeLive=function(id){
+  if(!deck.flyers.some(function(f){return f.id===id;}))return;
+  deck.liveId=id;base=null;baseJson='';drawStrip();
+  remote=true;try{persist();}finally{remote=false;}
+  sendNow({force:true});
+  var i=liveIdx();toast('Flyer '+(i+1)+' is now the live flyer: Claude and the bot see this one.');drawFeed();
+};
+/* local edits go to the server (and so to Claude) - only edits of the live flyer */
+var _persist=persist;persist=function(){_persist();if(!remote&&es)queueSend(700);};
 
 function drawFeed(msg){
   if(!box){box=document.createElement('div');box.id='liveFeed';document.body.appendChild(box);
     document.addEventListener('click',function(e){if(box.classList.contains('on')&&!box.contains(e.target)&&!btn.contains(e.target))box.classList.remove('on');});}
-  var h='<h3>Live link</h3>';
+  var h='<h3>Live link</h3>',li=liveIdx();
   if(msg)h+='<p class="nt" style="color:#ff8b8e">'+esc(msg)+'</p>';
   else if(!key)h+='<p class="nt">Connect this page to the live flyer: what Claude (or the WhatsApp bot) changes shows up here at once, and your own edits are visible to them. Paste the key from your link.</p>';
-  else h+='<p class="nt">'+(status==='on'?'Connected. Instructions from Claude appear here as they arrive.':'Not connected right now.')+'</p>';
+  else h+='<p class="nt">'+(status==='on'?'Connected. ':'Not connected right now. ')+(li<0?'No flyer is live: use "Make live" on a flyer in the strip.':'Flyer '+(li+1)+' is the live one (LIVE in the strip); the others stay in this browser only.')+'</p>';
   if(key&&feed.length)h+=feed.slice(0,12).map(function(e){return '<div class="ent"><b>'+esc(e.by)+'</b> '+esc(e.text)+'<small>'+t2(e.t)+'</small></div>';}).join('');
   else if(key)h+='<div class="ent"><small>No instructions yet.</small></div>';
-  h+='<div class="acts">'+(key?'<button class="btn" type="button" id="lvOff">Disconnect</button>':'')+'<button class="btn" type="button" id="lvKey">'+(key?'Change key':'Enter key')+'</button></div>';
+  h+='<div class="acts">'+(key&&li!==deck.i?'<button class="btn" type="button" id="lvMk">Make this flyer live</button>':'')+(key?'<button class="btn" type="button" id="lvOff">Disconnect</button>':'')+'<button class="btn" type="button" id="lvKey">'+(key?'Change key':'Enter key')+'</button></div>';
   box.innerHTML=h;
   var k=box.querySelector('#lvKey');if(k)k.addEventListener('click',askKey);
+  var mk=box.querySelector('#lvMk');if(mk)mk.addEventListener('click',function(){window.__makeLive(state.id);});
   var o=box.querySelector('#lvOff');if(o)o.addEventListener('click',function(){key='';saveStore({});disconnect(false);drawFeed();});
 }
 function askKey(){
@@ -2276,7 +2549,7 @@ function askKey(){
   if(v&&v.trim()){key=v.trim();saveStore({key:key,on:true});connect();}
 }
 btn.addEventListener('click',function(e){e.stopPropagation();drawFeed();box.classList.toggle('on');});
-if(key)connect();else setS('off','Go live');
+if(key){window.__liveOn=true;connect();}else setS('off','Go live');
 })();
 
 /* ---------- boot ---------- */
